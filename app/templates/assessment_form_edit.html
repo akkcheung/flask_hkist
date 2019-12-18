@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<script type="text/javascript">
+  
+  	function addForm() {
+  		console.log('call addForm') ;
+  	
+  	}
+
+	function removeForm() {
+		console.log('call removeForm')
+
+	}
+
+	$(document).ready(function() {
+	  	// console.log('document is ready!')
+	  	 $('#add_pq').click(addForm);
+	     $('#remove_pq').click(removeForm);
+	});
+
+</script>
+
+{{title}}
+
+<form action="" method="post" enctype="multipart/form-data">
+
+	<p></p>
+	<h5>Personal Detail : </h5>
+
+    {{ p_form.hidden_tag() }}
+    
+    <div class="form-row">
+	   	<div class="form-group col-md-2">
+	        {{ p_form.title.label }}<br>
+	        {{ p_form.title (class='form-control') }}<br>
+	        {% for error in p_form.title.errors %}
+	        	<span style="color: red;">[{{ error }}]</span>
+	        {% endfor %}
+	    </div>
+
+	   	<div class="form-group col-md-3">
+	        {{ p_form.name_of_registrant.label }}<br>
+	        {{ p_form.name_of_registrant (class='form-control') }}<br>
+	        {% for error in p_form.name_of_registrant.errors %}
+	        	<span style="color: red;">[{{ error }}]</span>
+	        {% endfor %}
+	    </div>
+
+	  	<div class="form-group col-md-3">
+	        {{ p_form.chinese_name.label }}<br>
+	        {{ p_form.chinese_name (class='form-control') }}<br>
+	        {% for error in p_form.chinese_name.errors %}
+	        	<span style="color: red;">[{{ error }}]</span>
+	        {% endfor %}
+	    </div>
+	</div>
+
+	<div class="form-row">
+	    <div class="form-group col-md-2">
+	        {{ p_form.date_of_birth.label }}<br>
+	        {{ p_form.date_of_birth(class='datepicker form-control') }}<br>
+	        {% for error in p_form.date_of_birth.errors %}
+	        	<span style="color: red;">[{{ error }}]</span>
+	        {% endfor %}
+	    </div>
+
+	    <div class="form-group col-md-3">
+	        {{ p_form.country_of_birth.label }}<br>
+	        {{ p_form.country_of_birth (class='form-control') }}<br>
+	        {% for error in p_form.country_of_birth.errors %}
+	        	<span style="color: red;">[{{ error }}]</span>
+	        {% endfor %}
+	    </div>
+
+	     <div class="form-group col-md-3">
+	        {{ p_form.mobile_phone.label }}<br>
+	        {{ p_form.mobile_phone (class='form-control') }}<br>
+	        {% for error in p_form.mobile_phone.errors %}
+	        	<span style="color: red;">[{{ error }}]</span>
+	        {% endfor %}
+	    </div>
+	</div>
+
+	<div class="form-row ">
+		<div class="form-group col-md-8">
+	        {{ p_form.correspondence_addr.label }}
+	        {{ p_form.correspondence_addr (class='form-control') }}
+	        {% for error in p_form.correspondence_addr.errors %}
+	        	<span style="color: red;">[{{ error }}]</span>
+	        {% endfor %}
+	    </div>
+	</div>
+
+	<p></p>
+	<h5>Language of Competence : </h5>
+
+ 	{{ lc_entries_form.hidden_tag() }}	
+
+ 	{{ lc_entries_form.lang_compentence_entries }}
+
+    {% for lc_form in lc_entries_form.lang_competence_entries %}
+    {{ lc_form.hidden_tag() }}
+
+    <div class="form-row">
+        <div class="form-group col-md-4 ">
+            {{ lc_form.dominant_lang.label }}            
+            {{ lc_form.dominant_lang }}
+        	{% for error in lc_form.dominant_lang.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}            
+        </div>          
+        <div class="form-group col-md-4 ">
+        	{{ lc_form.dominant_lang_other.label }}
+        	{{ lc_form.dominant_lang_other (class='form-control') }}
+            {% for error in lc_form.dominant_lang_other.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+    	</div>      
+    </div>
+
+    <div class="form-row">
+        <div class="form-group col-md-4 ">
+            {{ lc_form.lang_training_was_conducted.label }}            
+            {{ lc_form.lang_training_was_conducted }}
+        	{% for error in lc_form.lang_training_was_conducted.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}            
+        </div>          
+        <div class="form-group col-md-4 ">
+        	{{ lc_form.lang_training_was_conducted_other.label }}
+        	{{ lc_form.lang_training_was_conducted_other (class='form-control') }}
+            {% for error in lc_form.lang_training_was_conducted_other.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+    	</div>      
+    </div>
+    
+    <div class="form-row">
+        <div class="form-group col-md-4 ">
+            {{ lc_form.lang_provide_therapy.label }}            
+            {{ lc_form.lang_provide_therapy }}
+        	{% for error in lc_form.lang_provide_therapy.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}            
+        </div>          
+        <div class="form-group col-md-4 ">
+        	{{ lc_form.lang_provide_therapy_other.label }}
+        	{{ lc_form.lang_provide_therapy_other (class='form-control') }}
+            {% for error in lc_form.lang_provide_therapy_other.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+    	</div>      
+    </div>
+
+    {% endfor %}
+
+	<p></p>
+	<h5>Professional Qualification : </h5>
+
+	{{ pq_entries_form.hidden_tag() }}	
+
+	{% for pq_form in pq_entries_form.professional_qualification_entries %}
+    {{ pq_form.hidden_tag() }}
+
+	<div class="form-row">	
+	    <div class="form-group col-md-4">
+	        {{ pq_form.qualification_name.label }} 
+	        {{ pq_form.qualification_name (class='form-control') }}
+	        {% for error in pq_form.qualification_name.errors %}
+	        	<span style="color: red;">[{{ error }}]</span>
+	        {% endfor %}
+	    </div>
+		    
+	    <div class="form-group col-md-4">
+	        {{ pq_form.issue_authority.label }}
+	        {{ pq_form.issue_authority (class='form-control')}}
+	        {% for error in pq_form.issue_authority.errors %}
+	        	<span style="color: red;">[{{ error }}]</span>
+	        {% endfor %}
+	    </div>
+
+	    <div class="form-group col-md-2">
+	        {{ pq_form.issue_year.label }}
+	        {{ pq_form.issue_year (class='form-control') }}
+	        {% for error in pq_form.issue_year.errors %}
+	        	<span style="color: red;">[{{ error }}]</span>
+	        {% endfor %}
+	    </div>
+	</div>
+
+	<div class="form-row">	
+	 	<div class="form-group col-md-4">
+	        {{ pq_form.qualification_name_in_eng.label }}
+	        {{ pq_form.qualification_name_in_eng (class='form-control') }}
+	        {% for error in pq_form.qualification_name_in_eng.errors %}
+	        	<span style="color: red;">[{{ error }}]</span>
+	        {% endfor %}
+	    </div>
+
+		<div class="form-group  col-md-4">
+	        {{ pq_form.issue_authority_in_eng.label }}
+	        {{ pq_form.issue_authority_in_eng (class='form-control') }}
+	        {% for error in pq_form.issue_authority_in_eng.errors %}
+	        	<span style="color: red;">[{{ error }}]</span>
+	        {% endfor %}
+	    </div>
+
+	    <div class="form-group  col-md-2">
+	        {{ pq_form.country_name.label }}
+	        {{ pq_form.country_name (class='form-control') }}
+	        {% for error in pq_form.country_name.errors %}
+	        	<span style="color: red;">[{{ error }}]</span>
+	        {% endfor %}
+	    </div>
+	</div>
+    
+    <div class="form-row">	
+	    <div class="form-group col-md-4">
+	        {{ pq_form.language_of_instruction.label }}
+	        {{ pq_form.language_of_instruction (class='form-control') }}
+	        {% for error in pq_form.language_of_instruction.errors %}
+	        	<span style="color: red;">[{{ error }}]</span>
+	        {% endfor %}
+	    </div>
+
+	    <div class="form-group col-md-2">
+	        {{ pq_form.graduation_date.label }}
+	        {{ pq_form.graduation_date (class='form-control') }}
+	        {% for error in pq_form.graduation_date.errors %}
+	        	<span style="color: red;">[{{ error }}]</span>
+	        {% endfor %}
+	    </div>
+
+		<div class="form-group  col-md-2">
+	        {{ pq_form.level.label }}
+	        {{ pq_form.level (class='form-control') }}
+	        {% for error in pq_form.level.errors %}
+	        	<span style="color: red;">[{{ error }}]</span>
+	        {% endfor %}
+    	</div>
+	</div>
+
+    {% endfor %}
+
+    <a id="add_pq" href="?action=add_row_pq" >Add Row</a>
+
+    <p></p>
+	<h5>Professional Recognition : </h5>
+
+  	{{ pr_entries_form.hidden_tag() }}	
+
+	{% for pr_form in pr_entries_form.professional_recognition_entries %}
+   	{{ pr_form.hidden_tag() }}
+
+	<div class="form-row">	
+		<div class="form-group col-md-2">
+	        {{ pr_form.country_name.label }}
+	        {{ pr_form.country_name (class='form-control') }}
+	        {% for error in pr_form.country_name.errors %}
+	        	<span style="color: red;">[{{ error }}]</span>
+	        {% endfor %}
+    	</div>
+
+    	<div class="form-group col-md-4">	
+        {{ pr_form.organization_name.label }}
+        {{ pr_form.organization_name (class='form-control') }} 
+        {% for error in pr_form.organization_name.errors %}
+        	<span style="color: red;">[{{ error }}]</span>
+        {% endfor %}
+    	</div>
+
+    	<div class="form-group col-md-4">
+        {{ pr_form.membership_type.label }}
+        {{ pr_form.membership_type (class='form-control') }}
+        {% for error in pr_form.membership_type.errors %}
+        	<span style="color: red;">[{{ error }}]</span>
+        {% endfor %}
+    	</div>
+
+    </div>
+
+	 <div class="form-row">	
+		<div class="form-group col-md-2">
+        {{ pr_form.expiry_date.label }}
+        {{ pr_form.expiry_date(class='datepicker, form-control')  }}
+        {% for error in pr_form.expiry_date.errors %}
+        	<span style="color: red;">[{{ error }}]</span>
+        {% endfor %}
+    	</div>
+    </div>
+
+    {% endfor %}
+	
+	<a id="add_pr" href="?action=add_row_pr" >Add Row</a>
+
+    <p></p>
+	<h5>Work Experience : </h5>
+
+  	{{ wk_entries_form.hidden_tag() }}	
+
+	{% for wk_form in wk_entries_form.work_experience_entries %}
+   	{{ wk_form.hidden_tag() }}
+
+	<div class="form-row">	
+		<div class="form-group col-md-4">
+	        {{ wk_form.employer_name.label }}
+	        {{ wk_form.employer_name (class='form-control')  }}
+			{% for error in wk_form.employer_name.errors %}
+	        	<span style="color: red;">[{{ error }}]</span>
+			{% endfor %}
+		</div>
+
+		<div class="form-group col-md-4">
+	        {{ wk_form.job_title.label }}
+	        {{ wk_form.job_title (class='form-control')  }}
+			{% for error in wk_form.job_title.errors %}
+	        	<span style="color: red;">[{{ error }}]</span>
+			{% endfor %}
+		</div>
+
+		<div class="form-group col-md-2">
+	        {{ wk_form.from_date.label }}
+	        {{ wk_form.from_date(class='datepicker, form-control')  }}
+	        {% for error in wk_form.from_date.errors %}
+	        	<span style="color: red;">[{{ error }}]</span>
+	        {% endfor %}
+	    </div>
+
+        <div class="form-group col-md-2">
+        {{ wk_form.to_date.label }}
+        {{ wk_form.to_date(class='datepicker, form-control')  }}
+        {% for error in wk_form.to_date.errors %}
+        	<span style="color: red;">[{{ error }}]</span>
+        {% endfor %}
+    	</div>
+    	
+	</div>
+
+ 	{% endfor %}
+
+ 	<a id="add_pr" href="?action=add_row_wk" >Add Row</a>
+
+	<p></p>
+	<h5>My Upload : </h5>
+
+    {{ upl_form.hidden_tag() }}
+    {{ upl_form.photo }}
+
+
+
+	<table class="table">
+ 		<thead>
+		    <tr>
+		      <th scope="col">Date Uploaded</th>
+		      <th scope="col">File</th>
+		      <th scope="col"></th>
+		    </tr>
+		  </thead>
+		<tbody>
+			{% for uploadRecord in uploadRecords %}
+	        <tr valign="top">
+	        	<td> {{ uploadRecord.create_date }} </td>
+	            <td> <a href="/uploads/{{ uploadRecord.id }}"> {{ uploadRecord.filename }} </a></td>
+	            <td> <a href="/uploads/{{ uploadRecord.id }}/remove?from=%2Fassessment_form%2Fedit"> X </a></td>
+	        </tr>
+	    	{% endfor %}
+	    </tbody>
+    </table>
+
+    <p></p>
+	<button class="btn btn-primary" type="submit">Submit</button>
+
+</form>
+
+</div>
+
+{% endblock %}

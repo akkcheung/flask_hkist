@@ -1,0 +1,105 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <!-- <a class="navbar-brand" href="#">Navbar</a>
+  -->
+  <div id="navbarNav">
+    <ul class="navbar-nav">
+      {% if current_user.is_authenticated %}
+        {% if current_user.is_admin %}
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Admin
+          </a>
+          <div class="dropdown-menu">
+            <a class="dropdown-item" href="/members/list">List Registered Users</a>
+          </div>
+        </li>
+        {% endif %}
+      {% endif %}
+      <li class="nav-item">
+        <a class="nav-link" href="/page/news">Home</a>
+      </li>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          About Us
+        </a>
+        <div class="dropdown-menu">
+          <a class="dropdown-item" href="/page/governance">Governance</a>
+          <a class="dropdown-item" href="/page/committee">Committee</a>
+          <!--
+         <div class="dropdown-divider"></div>
+         <a class="dropdown-item" href="#">Something else here</a>
+         -->
+        </div>
+      </li>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Registration
+        </a>
+        <div class="dropdown-menu">
+          <!--
+          <a class="dropdown-item" href="#">SignUp</a>
+          -->
+          <a class="dropdown-item" href="/registrants/list">List of Registrants</a>
+          <a class="dropdown-item" href="/page/accreditation-training">Accreditation Of Training</a>
+          <!--
+         <div class="dropdown-divider"></div>
+         <a class="dropdown-item" href="#">Something else here</a>
+         -->
+        </div>
+      </li>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Conduct And Discipline
+        </a>
+        <div class="dropdown-menu">
+          <a class="dropdown-item" href="/page/standard-registrants">Code of Practice</a>
+          <a class="dropdown-item" href="/page/quotable-qualifications">Quotable Qualifications</a>
+          <a class="dropdown-item" href="/page/complaints-handling-procedures">Compliants Handling Procedures</a>
+          <a class="dropdown-item" href="/page/disciplinary-enquires">Disciplinary Enquiries</a>
+        </div>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/page/cpd">CPD</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/page/information-public">Information To Public</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/page/message-registrants">Message To Registrants</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/page/contact">Contact</a>
+      </li>
+      {% if current_user.is_authenticated %}
+      <!--
+      <li class="nav-item">
+        <a class="nav-link" href="#">My Profile</a>
+      </li>
+    -->
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          My Profile
+        </a>
+        <div class="dropdown-menu">
+          <a class="dropdown-item" href="/assessment_form/edit">Assessment Form Input</a>
+          <a class="dropdown-item" href="/payment">Payment</a>
+          <a class="dropdown-item" href="/cpd_activities/entry">CPD Activities Input</a>
+          <a class="dropdown-item" href="/logout">Logout</a>
+        </div>
+      </li>
+      <!--
+      <li class="nav-item">        
+        <a class="nav-link" href="/logout">Logout</a>
+      </li>
+      -->
+      {% else %}
+      <li class="nav-item">
+        <a class="nav-link" href="/register">SignUp</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/login">Login</a>
+      </li>
+      {% endif %}
+    </ul>
+  </div>
+</nav>

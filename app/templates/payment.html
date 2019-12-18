@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{{title}}
+
+<h4>Paid Annual Fee HK${{ fee.amount }}</h4>
+
+<form action="/charge" method="post">
+
+  <input type="hidden" id="description" name="description" value="{{ fee.description }}">
+  <input type="hidden" id="amount" name="amount" value="{{ amount|round|int }}">
+  <input type="hidden" id="fee_amount" name="fee_amount" value="{{ fee.amount }}">
+
+  <script src="https://checkout.stripe.com/checkout.js" class="stripe-button" data-key="{{ key }}" data-description="{{ fee.description }}" data-amount="{{ amount|round|int }}" data-locale="auto">
+  </script>
+
+</form>
+
+<p></p>
+
+<h5>Payment History :</h5>
+
+ 	<table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Date</th>
+          <th scope="col">Payment</th>
+          <th scope="col">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for payment in payments %}
+        <tr valign="top">
+            <td> {{ payment.date }} </td>
+            <td> {{ payment.description }} </td>
+            <td> {{ payment.currency }} {{ payment.amount }} </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+
+
+{% if prev_url %}
+	<a href="{{ prev_url }}">Previous Page</a>
+{% endif %}
+
+{% if next_url %}
+	<a href="{{ next_url }}">Next Page</a>
+{% endif %}
+
+
+
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{{ ckeditor.load() }}
+
+{{title}}
+
+<p></p>
+<form action="" method="post">    
+    {{ form.hidden_tag() }}
+
+    {{ form.id }}
+    <div class="form-row">  
+        <div class="form-group col-md-4">
+            {{ form.url.label }}
+            {{ form.url (class='form-control') }}
+            {% for error in form.url.errors %}
+            	<span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="form-row">  
+        <div class="form-group col-md-4">    
+            {{ form.title.label }}
+            {{ form.title (class='form-control') }}
+            {% for error in form.title.errors %}
+            	<span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="form-row">  
+        <div class="form-group col-md-10">    
+            {{ form.content.label }}
+            {{ form.content }}
+            {% for error in form.content.errors %}
+            	<span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <p>{{ form.submit() }}</p>
+</form>
+
+{% endblock %}

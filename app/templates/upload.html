@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>{{ title }}</h1>
+
+<form action="/upload" method="POST" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    {{ form.photo }}
+    <input type="submit">
+</form>
+
+{% for uploadRecord in uploadRecords %}
+
+ 	<table>
+        <tr valign="top">
+        	<td> {{ uploadRecord.create_date }} </td>
+            <td> <a href="uploads/{{ uploadRecord.id }}"> {{ uploadRecord.filename }} </a></td>
+            <td> <a href="uploads/{{ uploadRecord.id }}/remove"> X </a></td>
+        </tr>
+    </table>
+
+{% endfor %}
+
+{% if prev_url %}
+	<a href="{{ prev_url }}">Previous Page</a>
+{% endif %}
+
+{% if next_url %}
+	<a href="{{ next_url }}">Next Page</a>
+{% endif %}
+
+
+{% endblock %}

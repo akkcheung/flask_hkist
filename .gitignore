@@ -1,0 +1,12 @@
+*.pyc
+__ pycache __
+/app/static
+/instance/photos
+/migrations
+/migrations_old
+/venv
+config.py
+*.csv
+*.old
+my-readme.txt
+

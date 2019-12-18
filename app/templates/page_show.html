@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{{title}}
+
+{{page.content|safe}}
+
+<p></p>
+
+{% if current_user.is_authenticated and current_user.is_admin %}
+	<a href="/page/{{ page.id }}/edit">Edit</a>
+{% endif %}
+
+{% endblock %}

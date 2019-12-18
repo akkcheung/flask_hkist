@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{{title}}
+
+<table class="table">
+ 		<thead>
+		    <tr>
+		      <th scope="col">Name</th>
+		      <th scope="col">Chinese Name</th>
+		    </tr>
+		</thead>
+		<tbody>
+		{% for member in members %}
+	 	    <tr valign="top">
+	            <td> {{ member.name_of_registrant }} </td>
+	            <td> {{ member.chinese_name }} </td>
+	        </tr>
+        {% endfor %}
+    	</tbody>
+    </table>
+
+<p></p>
+{% if prev_url %}
+	<a href="{{ prev_url }}">Previous Page</a>
+{% endif %}
+
+{% if next_url %}
+	<a href="{{ next_url }}">Next Page</a>
+{% endif %}
+
+
+
+{% endblock %}

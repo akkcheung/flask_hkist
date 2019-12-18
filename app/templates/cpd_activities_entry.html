@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>{{title}}</h3>
+<form action="" method="post">
+
+
+
+    <div class="form-row">
+        <div class="form-group col-md-7">
+            <label for="Descripton">Description</label>
+        </div>
+        <div class="form-group col-md-1 mb-0">
+            <label for="Point Award">Point(s)</label>
+        </div>
+    </div>
+
+    {{ form.hidden_tag() }}
+
+    {% for cpd_activity_entry_form in form.cpd_activity_entries %}
+    {{ cpd_activity_entry_form.hidden_tag() }}
+
+	<div class="form-row">
+		<div class="form-group col-md-7 mb-0">
+			{{ cpd_activity_entry_form.category (class='form-control-plaintext') }}
+		</div>
+	</div>
+
+    <div class="form-row">
+        <div class="form-group col-md-7 mb-0">
+            {{ cpd_activity_entry_form.activity_description (rows='5',cols='60') }}
+            {% for error in cpd_activity_entry_form.activity_description.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </div>
+        <div class="form-group col-md-1 mb-0">
+            {{ cpd_activity_entry_form.point_awarded }}
+            {% for error in cpd_activity_entry_form.point_awarded.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+    <p></p>
+    <button class="btn btn-primary" type="submit">Submit</button>
+</form>
+{% endblock %}
