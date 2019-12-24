@@ -9,10 +9,16 @@ from flask_ckeditor import CKEditor
 #from flask_uploads import UploadSet, IMAGES, DOCUMENTS configure_uploads
 from flask_uploads import UploadSet, IMAGES, DOCUMENTS, DEFAULTS, configure_uploads,patch_request_class
 
+#import logging
+
 ckeditor = CKEditor()
+
 
 app = Flask(__name__)
 #app = Flask(__name__, static_url_path='/static')
+
+#logging.basicConfig(level=logging.DEBUG)
+
 app.config.from_object(Config)
 
 ckeditor.init_app(app)

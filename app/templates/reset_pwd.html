@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h3>{{ title }}</h3>
+
+<p></p>
+<form action="" method="post">
+
+    {{ form.hidden_tag() }}
+
+    {{ form.signUp.hidden_tag() }}
+
+    {{ form.askQuestion.hidden_tag() }}
+
+    <div class="form-row">
+        <div class="form-group col-md-2">
+        {{ form.signUp.email.label }}
+        {{ form.signUp.email(size=30) }}
+        {% for error in form.signUp.email.errors %}
+        	<span style="color: red;">[{{ error }}]</span>
+        {% endfor %}
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group col-md-2">
+        {{ form.signUp.password.label }}        
+        {{ form.signUp.password(size=30) }}
+        {% for error in form.signUp.password.errors %}
+        	<span style="color: red;">[{{ error }}]</span>
+        {% endfor %}
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group col-md-2">
+        {{ form.signUp.password2.label }}
+        {{ form.signUp.password2(size=30) }}
+        {% for error in form.signUp.password2.errors %}
+        	<span style="color: red;">[{{ error }}]</span>
+        {% endfor %}
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group col-md-2">
+        {{ form.askQuestion.answer.label }}
+        {{ form.askQuestion.answer(class='datepicker, form-control') }}
+        {% for error in form.askQuestion.answer.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+        {% endfor %}
+        </div>
+    </div>
+
+    <p></p>
+    <button class="btn btn-primary" type="submit">Submit</button>
+  
+</form>
+{% endblock %}

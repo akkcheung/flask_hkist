@@ -15,7 +15,7 @@ from werkzeug.utils import secure_filename
 
 from app import app, db, login, uploadSet
 
-from app.forms import LoginForm, SignUpForm, PageForm, PersonDetailForm, LangCompetenceForm, ProfessionalQualificationForm, ProfessionalRecognitionForm, WorkExperienceForm, CpdActivityEntryForm, CpdActivityEntriesForm, UploadForm
+from app.forms import LoginForm, SignUpForm, PageForm, PersonDetailForm, LangCompetenceForm, ProfessionalQualificationForm, ProfessionalRecognitionForm, WorkExperienceForm, CpdActivityEntryForm, CpdActivityEntriesForm, UploadForm, ResetPasswordForm
 
 from app.forms import LangCompetenceEntriesForm, ProfessionalQualificationEntriesForm, ProfessionalRecognitionEntriesForm, WorkExperienceEntriesForm, UploadEntriesForm
 
@@ -77,17 +77,56 @@ def register():
     form = SignUpForm()
 
     #if form.validate_on_submit():
-    if request.method == 'POST' and form.validate():	
-        #user = User(username=form.username.data, email=form.email.data)
-        user = User(email=form.email.data)
-        user.set_password(form.password.data)
-        db.session.add(user)
-        db.session.commit()
+    if request.method == 'POST' and form.validate():
         
-        flash('Congratulations, you are now a registered user!')
-        return redirect(url_for('login'))
+        user = User.query.filter_by(email=form.email.data).first()
+    
+        if user is not None :
+            flash('Please use a different email address.')
+
+        else :
+            #user = User(username=form.username.data, email=form.email.data)
+            user = User(email=form.email.data)
+            user.set_password(form.password.data)
+            db.session.add(user)
+            db.session.commit()
+
+            flash('Congratulations, you are now a registered user!')
+            return redirect(url_for('login'))
 
     return render_template('signup.html', title='Sign Up', form=form)
+
+
+@app.route('/reset_pwd', methods=['GET', 'POST'])
+def reset_pwd():
+
+    form = ResetPasswordForm()
+  
+    if request.method == 'POST' and form.validate():
+
+        user = User.query.filter_by(email=form.signUp.email.data).first()
+
+        if user is None :            
+            flash('No such user or incorrect Date of Birth!')
+
+        else :
+
+            personDetail = PersonDetail.query.filter_by(user_id=user.id).filter_by(date_of_birth=form.askQuestion.answer.data).first()
+
+            if personDetail is None :
+                flash('No such user or incorrect Date of Birth!')
+
+            else :
+                user.set_password(form.signUp.password.data)
+                db.session.commit()
+
+                flash('Reset password successful!')
+                return redirect(url_for('login'))
+
+    else :
+        print(form.errors)
+
+    return render_template('reset_pwd.html', title='Reset Password', form=form)
 
 
 @app.route('/profile', methods=['GET', 'POST'])
@@ -293,7 +332,7 @@ def member_list():
 def new():
     form = PageForm()
 
-    if current_user.is_admin :
+    if not current_user.is_admin :
             abort(404)
 
     if request.method == 'POST' and form.validate():

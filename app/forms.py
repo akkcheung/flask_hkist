@@ -1,6 +1,8 @@
 import re
 import decimal
 
+from flask import current_app
+
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 from flask_ckeditor import CKEditorField
@@ -140,22 +142,31 @@ class SignUpForm(FlaskForm):
     submit = SubmitField('Register')
 
     '''
-    def validate_username(self, username):
-        user = User.query.filter_by(username=username.data).first()
-        if user is not None:
-            raise ValidationError('Please use a different username.')
-	'''
-
     def validate_email(self, email):
+
+        #if submit is not None :
+
+        #current_app.logger.debug(submit.data)
+
         user = User.query.filter_by(email=email.data).first()
         if user is not None:
             raise ValidationError('Please use a different email address.')
+    '''
 
     def validate_password(self, password):
         matchObj = re.search("^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,8}$", password.data)
 
         if matchObj is None:
             raise ValidationError('Must contain at least 1 digit, 1 small letter and 1 capital letter and between 6-8 characters')
+
+
+class AskQuestionForm(FlaskForm):
+    answer = DateField('What is you birthday ?', format='%Y-%m-%d', validators=[DataRequired()])
+ 
+
+class ResetPasswordForm(FlaskForm):
+    signUp = FormField(SignUpForm)
+    askQuestion = FormField(AskQuestionForm)
 
 
 class CpdActivityEntryForm(FlaskForm):
