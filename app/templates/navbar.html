@@ -2,19 +2,7 @@
   <!-- <a class="navbar-brand" href="#">Navbar</a>
   -->
   <div id="navbarNav">
-    <ul class="navbar-nav">
-      {% if current_user.is_authenticated %}
-        {% if current_user.is_admin %}
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Admin
-          </a>
-          <div class="dropdown-menu">
-            <a class="dropdown-item" href="/members/list">List Registered Users</a>
-          </div>
-        </li>
-        {% endif %}
-      {% endif %}
+    <ul class="navbar-nav">     
       <li class="nav-item">
         <a class="nav-link" href="/page/news">Home</a>
       </li>
@@ -70,28 +58,24 @@
       <li class="nav-item">
         <a class="nav-link" href="/page/contact">Contact</a>
       </li>
+
       {% if current_user.is_authenticated %}
-      <!--
-      <li class="nav-item">
-        <a class="nav-link" href="#">My Profile</a>
-      </li>
-    -->
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
           My Profile
         </a>
         <div class="dropdown-menu">
-          <a class="dropdown-item" href="/assessment_form/edit">Assessment Form Input</a>
-          <a class="dropdown-item" href="/payment">Payment</a>
-          <a class="dropdown-item" href="/cpd_activities/entry">CPD Activities Input</a>
+          {% if current_user.is_admin %}
+              <a class="dropdown-item" href="/admin">System Administration</a>
+          {% else %}
+            <a class="dropdown-item" href="/assessment_form/edit">Assessment Form Input</a>
+            <a class="dropdown-item" href="/payment">Payment</a>
+            <a class="dropdown-item" href="/cpd_activities/entry">CPD Activities Input</a>          
+          {% endif %}
           <a class="dropdown-item" href="/logout">Logout</a>
         </div>
       </li>
-      <!--
-      <li class="nav-item">        
-        <a class="nav-link" href="/logout">Logout</a>
-      </li>
-      -->
+      
       {% else %}
       <li class="nav-item">
         <a class="nav-link" href="/register">SignUp</a>

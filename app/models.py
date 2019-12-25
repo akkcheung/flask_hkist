@@ -19,6 +19,20 @@ class User(UserMixin, db.Model):
 
     is_admin = db.Column(db.Boolean, default=False)
 
+    personDetail = db.relationship('PersonDetail', backref="user")
+
+    langCompetenceEntries = db.relationship('LangCompetence', backref="user")
+
+    professionalQualificationEntries = db.relationship('ProfessionalQualification', backref="user")
+
+    professionalRecognitionEntries = db.relationship('ProfessionalRecognition', backref="user")
+
+    WorkExperienceEntries = db.relationship('WorkExperience', backref="user")
+
+    cpdActivityEntries = db.relationship('CpdActivityEntry', backref="user")
+
+    paymentHistory = db.relationship('PaymentHistory', backref="user")
+
     def __repr__(self):
         return '<User Email {}>'.format(self.email)
 
@@ -29,6 +43,7 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
 
+# flask_login
 @login.user_loader
 def load_user(id):
     return User.query.get(int(id))
@@ -56,6 +71,9 @@ class PersonDetail(db.Model):
 
     #user = models.ForeignKey(User, on_delete=models.CASCADE)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    def __repr__(self):
+        return '<Name {}>'.format(self.name_of_registrant)
 
 class LangCompetence(db.Model):
 
@@ -146,6 +164,10 @@ class CpdActivity(db.Model):
     order_num = db.Column(db.Integer)
     activity_category = db.Column(db.String(300), nullable=False)
     is_active = db.Column(db.Boolean, default=True)
+
+    def __repr__(self):
+        return '<Activity Category : {}>'.format(self.activity_category)
+
 
 class CpdActivityEntry(db.Model):
 #class CpdActivityEntry(Base):

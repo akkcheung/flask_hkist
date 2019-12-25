@@ -9,11 +9,13 @@ from flask import current_app
 from flask import abort
 from flask import send_from_directory, send_file
 
+from flask_admin.contrib.sqla import ModelView
+
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.urls import url_parse
 from werkzeug.utils import secure_filename
 
-from app import app, db, login, uploadSet
+from app import app, db, login, uploadSet, admin
 
 from app.forms import LoginForm, SignUpForm, PageForm, PersonDetailForm, LangCompetenceForm, ProfessionalQualificationForm, ProfessionalRecognitionForm, WorkExperienceForm, CpdActivityEntryForm, CpdActivityEntriesForm, UploadForm, ResetPasswordForm
 
@@ -906,3 +908,77 @@ def assessment_form_edit():
         #, upl_c_form = upl_c_form
         , uploadRecords=uploadRecords,
         )
+
+
+### Flask Admin ###
+
+class AdminModelView(ModelView):
+    
+    def is_accessible(self):
+        if current_user.is_authenticated :
+            if current_user.is_admin :
+                return True
+            return True
+        return False
+
+    def inaccessible_callback(self, name, **kwargs):
+        # redirect to login page if user doesn't have access
+        return redirect(url_for('login', next=request.url))
+
+    can_create = False
+    can_edit = False
+    can_delete = False  
+    page_size = 50  
+
+class AdminModelEditView(AdminModelView):
+   
+    can_edit = True
+
+class CpdActivityEntryView(AdminModelView):
+
+    column_searchable_list = ['user.email']  
+
+class PaymentHistoryView(AdminModelView):
+
+    column_searchable_list = ['user.email']   
+
+class PersonDetailView(AdminModelView):
+
+    column_searchable_list = ['name_of_registrant', 'mobile_phone', 'user.email']
+
+class LangCompetenceView(AdminModelView):
+
+    column_searchable_list = ['user.email']   
+
+class ProfessionalQualificationView(AdminModelView):
+
+    column_searchable_list = ['user.email']   
+
+class ProfessionalRecognitionView(AdminModelView):
+
+    column_searchable_list = ['user.email']   
+
+class WorkExperienceView(AdminModelView):
+
+    column_searchable_list = ['user.email']   
+
+#admin.add_view(AdminModelView(User, db.session, category="Members Area"))
+
+admin.add_view(PaymentHistoryView(PaymentHistory, db.session, category="Members Area"))
+
+admin.add_view(CpdActivityEntryView(CpdActivityEntry, db.session, category="Members Area"))
+
+admin.add_view(PersonDetailView(PersonDetail, db.session, category="Members Area"))
+
+admin.add_view(LangCompetenceView(LangCompetence, db.session, category="Members Area"))
+
+admin.add_view(ProfessionalQualificationView(ProfessionalQualification, db.session, category="Members Area"))
+
+admin.add_view(ProfessionalRecognitionView(ProfessionalRecognition, db.session, category="Members Area"))
+
+admin.add_view(WorkExperienceView(WorkExperience, db.session, category="Members Area"))
+
+admin.add_view(AdminModelEditView(CpdActivity, db.session, category="System Maintenance"))
+
+admin.add_view(AdminModelEditView(Fee, db.session, category="System Maintenance"))
+
