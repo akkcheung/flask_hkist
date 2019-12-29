@@ -22,6 +22,7 @@ app = Flask(__name__)
 #logging.basicConfig(level=logging.DEBUG)
 
 app.config.from_object(Config)
+app.config['MAX_CONTENT_LENGTH'] = 3 * 1024 * 1024
 
 ckeditor.init_app(app)
 

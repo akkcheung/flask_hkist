@@ -37,6 +37,7 @@ class LoginForm(FlaskForm):
     remember_me = BooleanField('Remember Me')
     submit = SubmitField('Sign In')
 
+
 class PageForm(FlaskForm):
 
     id = HiddenField('id')
@@ -44,6 +45,10 @@ class PageForm(FlaskForm):
     content = CKEditorField('Write something')
     #tags = StringField('Tags')
     url = StringField('Url', validators=[DataRequired(), Length(max=100)])
+    submit = SubmitField('Submit')
+
+
+class PersonDetailRegisterStatusRefreshForm(FlaskForm):
     submit = SubmitField('Submit')
 
 class PersonDetailForm(FlaskForm):

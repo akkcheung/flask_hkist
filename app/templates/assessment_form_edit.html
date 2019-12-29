@@ -357,12 +357,12 @@
 		      <th scope="col">File</th>
 		      <th scope="col"></th>
 		    </tr>
-		  </thead>
+		</thead>
 		<tbody>
 			{% for uploadRecord in uploadRecords %}
 	        <tr valign="top">
 	        	<td> {{ uploadRecord.create_date }} </td>
-	            <td> <a href="/uploads/{{ uploadRecord.id }}"> {{ uploadRecord.filename }} </a></td>
+	            <td> <a href="/uploads/{{ uploadRecord.id }}" target="_blank"> {{ uploadRecord.filename }} </a></td>
 	            <td> <a href="/uploads/{{ uploadRecord.id }}/remove?from=%2Fassessment_form%2Fedit"> X </a></td>
 	        </tr>
 	    	{% endfor %}

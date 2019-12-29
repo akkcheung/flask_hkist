@@ -33,6 +33,8 @@ class User(UserMixin, db.Model):
 
     paymentHistory = db.relationship('PaymentHistory', backref="user")
 
+    UploadData = db.relationship('UploadData', backref="user")
+
     def __repr__(self):
         return '<User Email {}>'.format(self.email)
 

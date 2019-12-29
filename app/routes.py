@@ -10,6 +10,7 @@ from flask import abort
 from flask import send_from_directory, send_file
 
 from flask_admin.contrib.sqla import ModelView
+from jinja2 import Markup
 
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.urls import url_parse
@@ -17,7 +18,7 @@ from werkzeug.utils import secure_filename
 
 from app import app, db, login, uploadSet, admin
 
-from app.forms import LoginForm, SignUpForm, PageForm, PersonDetailForm, LangCompetenceForm, ProfessionalQualificationForm, ProfessionalRecognitionForm, WorkExperienceForm, CpdActivityEntryForm, CpdActivityEntriesForm, UploadForm, ResetPasswordForm
+from app.forms import LoginForm, SignUpForm, PageForm, PersonDetailForm, LangCompetenceForm, ProfessionalQualificationForm, ProfessionalRecognitionForm, WorkExperienceForm, CpdActivityEntryForm, CpdActivityEntriesForm, UploadForm, ResetPasswordForm, PersonDetailRegisterStatusRefreshForm
 
 from app.forms import LangCompetenceEntriesForm, ProfessionalQualificationEntriesForm, ProfessionalRecognitionEntriesForm, WorkExperienceEntriesForm, UploadEntriesForm
 
@@ -310,7 +311,7 @@ def cpd_activities_entry():
     return render_template('cpd_activities_entry.html', title='CPD Activities Entry', form=form)
 
 @app.route('/registrants/list', methods=['GET'])
-@app.route('/members/list', methods=['GET', 'POST'])
+#@app.route('/members/list', methods=['GET', 'POST'])
 @login_required
 def member_list():
 
@@ -328,10 +329,48 @@ def member_list():
     return render_template('member_list.html', title='Registered Members List', members=members.items, next_url=next_url, prev_url=prev_url)
 
 
+@app.route('/registrants/status/refresh', methods=['GET', 'POST'])
+@login_required
+def member_refresh_regisiter_status():
+
+    if not current_user.is_admin :
+        abort(404)
+
+    form = PersonDetailRegisterStatusRefreshForm()
+
+    if request.method == 'GET':
+        pass
+
+    else :
+        members = PersonDetail.query.all()
+
+        date_time_str = str(date.today().year)
+        date_time_str = date_time_str + "-01-01 00:00:00"
+
+        date_time_obj = datetime.strptime(date_time_str, '%Y-%m-%d %H:%M:%S')
+
+        #app.logger.debug(date_time_obj)
+
+        for member in members :
+            
+            paymentHistory = PaymentHistory.query.filter_by(user_id=member.user_id).filter(PaymentHistory.date > date_time_obj).first()
+
+            if not paymentHistory is None :
+                member.is_register = True
+
+            else :
+                member.is_register = False
+
+            db.session.commit()
+
+        flash('Refresh complete!')
+        return redirect(url_for('member_list'))
+
+    return render_template('member_register_status_refresh.html', title='Refresh Members\' register Status', form=form)
 
 @app.route('/page/new', methods=['GET', 'POST'])
 @login_required
-def new():
+def page_new():
     form = PageForm()
 
     if not current_user.is_admin :
@@ -399,7 +438,7 @@ def page_show(page_id):
     if page is None:
         abort(404)        
 
-    current_app.logger.debug(page.title)
+    #current_app.logger.debug(page.title)
 
     return render_template('page_show.html', title=page.title, page=page)
 
@@ -462,11 +501,25 @@ def download_file(id):
    
     uploadData = UploadData.query.filter_by(id=id).first()
 
-    if uploadData is None or uploadData.user_id != current_user.id:
+    #app.logger.debug(uploadData.user_id)
+    #app.logger.debug(current_user.id)
+
+    #if uploadData is None or  uploadData.user_id != current_user.id:
+    if uploadData is None :
           abort(404)
+
+    else : 
+        #if uploadData.user_id != current_user.id or not current_user.is_admin :
+        if current_user.is_admin :
+            pass
+
+        else : 
+            if uploadData.user_id != current_user.id :
+                abort(404)
 
     #return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
     #return send_from_directory(app.instance_path + '/photos', filename, as_attachment=True)
+    
     return send_file(app.instance_path + '/photos/' + uploadData.uuid_filename, attachment_filename=uploadData.filename)
 
 
@@ -718,7 +771,8 @@ def assessment_form_edit():
 
     elif request.method == 'POST' and p_form.validate() and lc_entries_form.validate() and pq_entries_form.validate() and pr_entries_form.validate() and wk_entries_form.validate() and upl_form.validate() :
     
-    
+        is_error = False
+
         personDetail = PersonDetail()
 
         if p_form.id.data:
@@ -868,25 +922,35 @@ def assessment_form_edit():
             if f is not None :
                 filename = secure_filename(f.filename)
 
-                uuid_filename = str(uuid.uuid4().hex) +  '.' + f.filename.rsplit(".", 1)[1]
-                f.save(os.path.join(
-                    app.instance_path, 'photos', uuid_filename            
-                ))
+                suffix = f.filename.rsplit(".", 1)[1]
 
-                uploadData = UploadData()
-                uploadData.filename = f.filename
-                uploadData.uuid_filename = uuid_filename
-                uploadData.create_date = datetime.now()
+                if suffix not in app.config['ALLOWED_EXTENSIONS'] :
+                    flash('File type [' + suffix + '] is not allowed!')
 
-                uploadData.user_id = current_user.id
+                    is_error = True
 
-                db.session.add(uploadData)
+                else :
+                    uuid_filename = str(uuid.uuid4().hex) +  '.' + f.filename.rsplit(".", 1)[1]
+                    f.save(os.path.join(
+                        app.instance_path, 'photos', uuid_filename            
+                    ))
 
-        db.session.commit()
+                    uploadData = UploadData()
+                    uploadData.filename = f.filename
+                    uploadData.uuid_filename = uuid_filename
+                    uploadData.create_date = datetime.now()
 
-        flash('Form is saved!')
-        #return redirect(url_for('index'))
-        return redirect(url_for('assessment_form_edit'))
+                    uploadData.user_id = current_user.id
+
+                    db.session.add(uploadData)
+
+
+        if not is_error :
+            db.session.commit()
+
+            flash('Form is saved!')
+            #return redirect(url_for('index'))
+            return redirect(url_for('assessment_form_edit'))
 
     else:
         flash('Error occured!')        
@@ -960,7 +1024,26 @@ class ProfessionalRecognitionView(AdminModelView):
 
 class WorkExperienceView(AdminModelView):
 
-    column_searchable_list = ['user.email']   
+    column_searchable_list = ['user.email']
+
+class UploadDataView(AdminModelView):
+
+    column_exclude_list = ['uuid_filename', ]
+
+    column_searchable_list = ['user.email']
+    
+    def _filename_formatter(view, context, model, name):
+        return Markup(
+            u"<a href='%s' target='_blank'>%s</a>" % (
+                url_for('download_file', id=model.id),
+                model.filename
+            )
+        ) if model.user else u""
+
+    column_formatters = {
+        'filename': _filename_formatter
+    }
+
 
 #admin.add_view(AdminModelView(User, db.session, category="Members Area"))
 
@@ -977,6 +1060,9 @@ admin.add_view(ProfessionalQualificationView(ProfessionalQualification, db.sessi
 admin.add_view(ProfessionalRecognitionView(ProfessionalRecognition, db.session, category="Members Area"))
 
 admin.add_view(WorkExperienceView(WorkExperience, db.session, category="Members Area"))
+
+admin.add_view(UploadDataView(UploadData, db.session, category="Members Area"))
+
 
 admin.add_view(AdminModelEditView(CpdActivity, db.session, category="System Maintenance"))
 

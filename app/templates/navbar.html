@@ -67,6 +67,7 @@
         <div class="dropdown-menu">
           {% if current_user.is_admin %}
               <a class="dropdown-item" href="/admin">System Administration</a>
+              <a class="dropdown-item" href="/registrants/status/refresh">Refresh Registrants' status</a>
           {% else %}
             <a class="dropdown-item" href="/assessment_form/edit">Assessment Form Input</a>
             <a class="dropdown-item" href="/payment">Payment</a>
