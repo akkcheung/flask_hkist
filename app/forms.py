@@ -10,7 +10,7 @@ from flask_ckeditor import CKEditorField
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, HiddenField, SelectField, RadioField, DecimalField
 from wtforms.fields.html5 import DateField
 from wtforms.fields import FieldList, FormField, TextAreaField
-from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, Regexp
+from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, Regexp, Optional
 
 #from wtforms.widgets import TextArea
 
@@ -90,16 +90,16 @@ class LangCompetenceEntriesForm(FlaskForm):
 class ProfessionalQualificationForm(FlaskForm):
 
     professional_qualification_id = HiddenField('id')
-    qualification_name = StringField('Qualification Name', validators=[DataRequired()])
-    issue_authority = StringField('Issue Authority', validators=[DataRequired()])
+    qualification_name = StringField('Qualification Name')
+    issue_authority = StringField('Issue Authority')
     issue_year = StringField('Issue Year', validators=[DataRequired()])
 
-    qualification_name_in_eng = StringField('Qualification Name in English')
-    issue_authority_in_eng = StringField('Issue Authority in English')
+    qualification_name_in_eng = StringField('Qualification Name in English', validators=[DataRequired()])
+    issue_authority_in_eng = StringField('Issue Authority in English', validators=[DataRequired()])
 
     country_name = StringField('Country Name')
     language_of_instruction= StringField('Language of Instruction')
-    graduation_date = DateField('Graduation Date', format='%Y-%m-%d')
+    graduation_date = DateField('Graduation Date', format='%Y-%m-%d', validators=[Optional()])
     level = StringField('Level')
 
     #upload_file = FileField('Upload File', validators=[FileAllowed(['png', 'pdf', 'jpg'], "wrong format!")])
@@ -115,7 +115,7 @@ class ProfessionalRecognitionForm(FlaskForm):
     country_name = StringField('Country Name', validators=[DataRequired()])
     organization_name = StringField('Organization Name', validators=[DataRequired()])
     membership_type = StringField('Membership Type')
-    expiry_date = DateField('Expiry Date', format='%Y-%m-%d')
+    expiry_date = DateField('Expiry Date', format='%Y-%m-%d', validators=[Optional()])
 
     
 class ProfessionalRecognitionEntriesForm(FlaskForm):
@@ -128,14 +128,14 @@ class WorkExperienceForm(FlaskForm):
     work_experience_id = HiddenField('id')
     employer_name = StringField('Employer Name', validators=[DataRequired()])
     job_title = StringField('Job Title', validators=[DataRequired()])
-    from_date = DateField('Start Date', format='%Y-%m-%d', validators=[DataRequired()])
-    to_date = DateField('End Date', format='%Y-%m-%d')
+    from_date = DateField('Start Date', format='%Y-%m-%d', validators=[Optional()])
+    to_date = DateField('End Date', format='%Y-%m-%d', validators=[Optional()])
 
 
 class WorkExperienceEntriesForm(FlaskForm):
 
-    work_experience_entries = FieldList(FormField(WorkExperienceForm), min_entries=0, max_entries=3)
-
+    #work_experience_entries = FieldList(FormField(WorkExperienceForm), min_entries=0, max_entries=3)
+    work_experience_entries = FieldList(FormField(WorkExperienceForm), min_entries=0, max_entries=5)
 
 class SignUpForm(FlaskForm):
 

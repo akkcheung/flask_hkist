@@ -130,6 +130,9 @@ class WorkExperience(db.Model):
     from_date = db.Column(db.DateTime)
     to_date = db.Column(db.DateTime)
 
+    exp_from = db.Column(db.String(10))
+    exp_to = db.Column(db.String(10))
+
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 class Page(db.Model):

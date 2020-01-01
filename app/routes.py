@@ -148,7 +148,7 @@ def payment():
 
     page = request.args.get('page', 1, type=int)
     
-    payments = PaymentHistory.query.order_by(PaymentHistory.date.desc()).paginate(page, app.config['PAYMENT_HISTORY_RECORD_PER_PAGE'], False)
+    payments = PaymentHistory.query.filter_by(user_id=current_user.id).order_by(PaymentHistory.date.desc()).paginate(page, app.config['PAYMENT_HISTORY_RECORD_PER_PAGE'], False)
 
     next_url = url_for('payment', page=payments.next_num) \
         if payments.has_next else None
@@ -817,7 +817,7 @@ def assessment_form_edit():
                 langCompetence.lang_training_was_conducted = form.lang_training_was_conducted.data
                 langCompetence.lang_training_was_conducted_other = form.lang_training_was_conducted_other.data
                 langCompetence.lang_provide_therapy = form.lang_provide_therapy.data
-                langCompetence.lang_provide_therapy_other = form.lang_training_was_conducted_other.data
+                langCompetence.lang_provide_therapy_other = form.lang_provide_therapy_other.data
                 
                 #db.session.commit()
 
