@@ -7,12 +7,13 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 from flask_ckeditor import CKEditorField
 
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, HiddenField, SelectField, RadioField, DecimalField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, HiddenField, SelectField, RadioField, DecimalField, SelectMultipleField
 from wtforms.fields.html5 import DateField
 from wtforms.fields import FieldList, FormField, TextAreaField
-from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, Regexp, Optional
+from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, Regexp, Optional, Required
 
 #from wtforms.widgets import TextArea
+from wtforms.widgets import ListWidget, CheckboxInput
 
 from wtforms import Form
 
@@ -28,6 +29,16 @@ class ModelForm(BaseModelForm):
     def get_session(self):
         return db.session
 '''
+
+class MultiCheckboxField(SelectMultipleField):
+    """
+    A multiple-select, except displays a list of checkboxes.
+
+    Iterating the field will produce subfields, allowing custom rendering of
+    the enclosed checkbox fields.
+    """
+    widget = ListWidget(prefix_label=False)
+    option_widget = CheckboxInput()
 
 class LoginForm(FlaskForm):
 
@@ -74,13 +85,25 @@ class PersonDetailForm(FlaskForm):
 class LangCompetenceForm(FlaskForm):
 
     lang_competence_id = HiddenField('id')
-    dominant_lang = RadioField('Your Dominant Language(s)', choices=[('C','Cantonese'),('E','English'),('P','Putonghua')])
+    #dominant_lang = RadioField('Your Dominant Language(s)', choices=[('C','Cantonese'),('E','English'),('P','Putonghua')])
+    #dominant_lang_multiple = MultiCheckboxField('Your Dominant Language(s)', [Required(message='Please tick your language(s)')], choices=[('C','Cantonese'), ('E','English'), ('P', 'Putonghua')])
+
+    string_of_langs = ['Cantonese\r\nEnglish\r\nPutonghua\r\n']
+    list_of_lang = string_of_langs[0].split()
+    langs = [(x, x) for x in list_of_lang]
+
+    dominant_lang_multiple = MultiCheckboxField('Your Dominant Language(s)',[Required(message='Please tick your language(s)')], choices=langs)
+
     dominant_lang_other = StringField('Other')
 
-    lang_training_was_conducted = RadioField('The language(s) in which your therapy training was conducted', choices=[('C','Cantonese'),('E','English'),('P','Putonghua')])
+    #lang_training_was_conducted = RadioField('The language(s) in which your therapy training was conducted', choices=[('C','Cantonese'),('E','English'),('P','Putonghua')])
+    lang_training_was_conducted_multiple = MultiCheckboxField('The language(s) in which your therapy training was conducted',[Required(message='Please tick your language(s)')], choices=langs)
+
     lang_training_was_conducted_other = StringField('Other')
 
-    lang_provide_therapy = RadioField('The language(s) in which your will provide speech therapy', choices=[('C','Cantonese'),('E','English'),('P','Putonghua')])
+    #lang_provide_therapy = RadioField('The language(s) in which your will provide speech therapy', choices=[('C','Cantonese'),('E','English'),('P','Putonghua')])
+    lang_provide_therapy_multiple = MultiCheckboxField('The language(s) in which your will provide speech therapy',[Required(message='Please tick your language(s)')], choices=langs)
+
     lang_provide_therapy_other = StringField('Other')
 
 class LangCompetenceEntriesForm(FlaskForm):
@@ -100,7 +123,7 @@ class ProfessionalQualificationForm(FlaskForm):
     country_name = StringField('Country Name')
     language_of_instruction= StringField('Language of Instruction')
     graduation_date = DateField('Graduation Date', format='%Y-%m-%d', validators=[Optional()])
-    level = StringField('Level')
+    #level = StringField('Level')
 
     #upload_file = FileField('Upload File', validators=[FileAllowed(['png', 'pdf', 'jpg'], "wrong format!")])
 

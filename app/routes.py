@@ -52,11 +52,11 @@ def login():
         user = User.query.filter_by(email=form.email.data).first()
         
         if user is None or not user.check_password(form.password.data):
-            flash('Invalid email or password')
+            flash('Invalid email or password', 'warning')
             return redirect(url_for('login'))
         else :
             login_user(user, remember=True)
-            flash('login successful')
+            flash('login successful', 'info')
 
         return redirect(url_for('index'))
 
@@ -85,7 +85,7 @@ def register():
         user = User.query.filter_by(email=form.email.data).first()
     
         if user is not None :
-            flash('Please use a different email address.')
+            flash('Please use a different email address.', 'warning')
 
         else :
             #user = User(username=form.username.data, email=form.email.data)
@@ -94,7 +94,7 @@ def register():
             db.session.add(user)
             db.session.commit()
 
-            flash('Congratulations, you are now a registered user!')
+            flash('Congratulations, you are now a registered user!', 'success')
             return redirect(url_for('login'))
 
     return render_template('signup.html', title='Sign Up', form=form)
@@ -110,20 +110,20 @@ def reset_pwd():
         user = User.query.filter_by(email=form.signUp.email.data).first()
 
         if user is None :            
-            flash('No such user or incorrect Date of Birth!')
+            flash('No such user or incorrect Date of Birth!', 'warning')
 
         else :
 
             personDetail = PersonDetail.query.filter_by(user_id=user.id).filter_by(date_of_birth=form.askQuestion.answer.data).first()
 
             if personDetail is None :
-                flash('No such user or incorrect Date of Birth!')
+                flash('No such user or incorrect Date of Birth!', 'warning')
 
             else :
                 user.set_password(form.signUp.password.data)
                 db.session.commit()
 
-                flash('Reset password successful!')
+                flash('Reset password successful!', 'success')
                 return redirect(url_for('login'))
 
     else :
@@ -201,21 +201,21 @@ def charge():
 
             #context['result'] = "<h2>Thanks, you paid <strong>$" + request.POST['fee_amount'] + "</strong></h2>"
 
-            flash('Thanks for you payment!')
+            flash('Thanks for you payment!', 'success')
 
         except stripe.error.StripeError as e:
             #context['result'] = "<h2>Something goes wrong</h2>"
             print (type(e))
             print (e)
 
-            flash('Something goes wrong. Please contact Administrator!')
+            flash('Something goes wrong. Please contact Administrator!', 'danger')
 
         except Exception as e:
             #print '%s (%s)' % (e.message, type(e))
             print (type(e))
             print (e)
             # context['result'] = "<h2>Something goes wrong</h2>"
-            flash('Something goes wrong. Please contact Administrator!')
+            flash('Something goes wrong. Please contact Administrator!', 'danger')
 
         #return render(request, 'charge.html')
         #return render(request, 'charge.html', context)
@@ -300,7 +300,7 @@ def cpd_activities_entry():
 
                 db.session.commit()
 
-            flash('Records are saved!')
+            flash('Records are saved!', 'success')
             return redirect(url_for('index'))
 
         else :
@@ -312,7 +312,7 @@ def cpd_activities_entry():
 
 @app.route('/registrants/list', methods=['GET'])
 #@app.route('/members/list', methods=['GET', 'POST'])
-@login_required
+#@login_required
 def member_list():
 
     page = request.args.get('page', 1, type=int)
@@ -363,7 +363,7 @@ def member_refresh_regisiter_status():
 
             db.session.commit()
 
-        flash('Refresh complete!')
+        flash('Refresh complete!', 'success')
         return redirect(url_for('member_list'))
 
     return render_template('member_register_status_refresh.html', title='Refresh Members\' register Status', form=form)
@@ -386,7 +386,7 @@ def page_new():
         db.session.add(page)
         db.session.commit()
 
-        flash('Page (New) is saved!')
+        flash('Page is saved!', 'success')
         return redirect(url_for('index'))
 
     return render_template('page.html', title='Page', form=form)
@@ -415,7 +415,7 @@ def page_edit(page_id):
         
         db.session.commit()
 
-        flash('Page is saved!')
+        flash('Page is saved!', 'success')
         return redirect(url_for('index'))
 
     return render_template('page.html', title='Page', form=form)
@@ -483,7 +483,7 @@ def upload():
         db.session.add(uploadData)
         db.session.commit()
 
-        flash('File is upload!')
+        flash('File is upload!', 'success')
 
         #return redirect(url_for('index'))
         return redirect(url_for('upload'))
@@ -535,7 +535,7 @@ def remove_file(id):
             os.remove(app.instance_path + '/photos/' + uploadData.uuid_filename)
 
         except FileNotFoundError:
-            flash('The file doesn\`t not exist!')
+            flash('The file doesn\`t not exist!', 'warning')
 
         db.session.delete(uploadData)
         db.session.commit()
@@ -556,6 +556,10 @@ def page_not_found(error):
 @app.route('/assessment_form/edit', methods=['GET', 'POST'])
 @login_required
 def assessment_form_edit():
+
+    if current_user.is_registration_form_submit :
+        flash('Your registration form is submitted!', 'warning')
+        return redirect(url_for('index'))
 
     p_form = PersonDetailForm(prefix='p-')
 
@@ -590,13 +594,16 @@ def assessment_form_edit():
         #if lc_entries is None:
         if len(lc_entries) == 0:
 
+            #"dominant_lang" : '',
+            
             lc_data = {
                 "lang_competence_id" : 0,
-                "dominant_lang" : '',
+                
+                "dominant_lang_multiple" : '',
                 "dominant_lang_other" : '',
-                "lang_training_was_conducted" : '',
+                "lang_training_was_conducted_multiple" : '',
                 "lang_training_was_conducted_other" : '',
-                "lang_provide_therapy" : '',
+                "lang_provide_therapy_multiple" : '',
                 "lang_provide_therapy_other" : '',
             }
 
@@ -605,17 +612,19 @@ def assessment_form_edit():
         else :
             
             for lc_entry in lc_entries :
-            
+                            
                 lc_data = {
                     "lang_competence_id" : lc_entry.id,
-                    "dominant_lang" : lc_entry.dominant_lang,
+                    "dominant_lang_multiple" : lc_entry.dominant_lang_multiple,
                     "dominant_lang_other" : lc_entry.dominant_lang_other,
-                    "lang_training_was_conducted" : lc_entry.lang_training_was_conducted,
+                    "lang_training_was_conducted_multiple" : lc_entry.lang_training_was_conducted_multiple,
                     "lang_training_was_conducted_other" : lc_entry.lang_training_was_conducted_other,
-                    "lang_provide_therapy" : lc_entry.lang_provide_therapy,
+                    "lang_provide_therapy_multiple" : lc_entry.lang_provide_therapy_multiple,
                     "lang_provide_therapy_other" : lc_entry.lang_provide_therapy_other,
                 }
-                
+
+                print(lc_data)
+
                 lc_entries_form.lang_competence_entries.append_entry(lc_data)
 
         pq_entries = ProfessionalQualification.query.filter_by(user_id=current_user.id).all()   
@@ -675,7 +684,7 @@ def assessment_form_edit():
                 pq_entries_form.professional_qualification_entries.append_entry(pq_data)
             
             elif action == "add_row_pq" :
-                flash('Maximun 3 rows are reached!')
+                flash('Maximun 3 rows are reached!', 'warning')
 
         pr_entries = ProfessionalRecognition.query.filter_by(user_id=current_user.id).all()   
 
@@ -720,7 +729,7 @@ def assessment_form_edit():
             
             elif action == "add_row_pr" :
 
-                flash('Maximun 3 rows are reached!')
+                flash('Maximun 3 rows are reached!', 'warning')
 
         wk_entries = WorkExperience().query.filter_by(user_id=current_user.id).all()   
 
@@ -764,7 +773,7 @@ def assessment_form_edit():
             
             elif action == "add_row_wk" and len(wk_entries_form.work_experience_entries) == 3 :
 
-                flash('Maximun 3 rows are reached!')
+                flash('Maximun 3 rows are reached!', 'warning')
 
         #uploadRecords = UploadData.query.filter_by(user_id=current_user.id).order_by(UploadData.create_date.desc()).all()
 
@@ -796,7 +805,16 @@ def assessment_form_edit():
 
                 langCompetence.id = None
 
-                langCompetence.dominant_lang = form.dominant_lang.data
+                #langCompetence.dominant_lang = form.dominant_lang.data
+                list_of_langs = form.dominant_lang_multiple.data
+
+                langs = "" 
+
+                for ele in list_of_langs:  
+                    langs = langs + ele + ";"   
+
+                langCompetence.dominant_lang_multiple = langs
+
                 langCompetence.dominant_lang_other = form.dominant_lang_other.data
                 langCompetence.lang_training_was_conducted = form.lang_training_was_conducted.data
                 langCompetence.lang_training_was_conducted_other = form.lang_training_was_conducted_other.data
@@ -812,11 +830,44 @@ def assessment_form_edit():
 
                 langCompetence = LangCompetence.query.filter_by(id=form.lang_competence_id.data).filter_by(user_id=current_user.id).first()
 
-                langCompetence.dominant_lang = form.dominant_lang.data
+                #langCompetence.dominant_lang = form.dominant_lang.data
+
+                list_of_langs = form.dominant_lang_multiple.data
+
+                langs = "" 
+
+                for ele in list_of_langs:  
+                    langs = langs + ele + ";"   
+
+                langCompetence.dominant_lang_multiple = langs
+                
                 langCompetence.dominant_lang_other = form.dominant_lang_other.data
-                langCompetence.lang_training_was_conducted = form.lang_training_was_conducted.data
+
+                #langCompetence.lang_training_was_conducted = form.lang_training_was_conducted.data
+                
+                list_of_langs = form.lang_training_was_conducted_multiple.data
+
+                langs = "" 
+
+                for ele in list_of_langs:  
+                    langs = langs + ele + ";"   
+
+
+                langCompetence.lang_training_was_conducted_multiple = langs
+                
                 langCompetence.lang_training_was_conducted_other = form.lang_training_was_conducted_other.data
-                langCompetence.lang_provide_therapy = form.lang_provide_therapy.data
+                
+                #langCompetence.lang_provide_therapy = form.lang_provide_therapy.data
+                list_of_langs = form.lang_provide_therapy_multiple.data
+
+                langs = "" 
+
+                for ele in list_of_langs:  
+                    langs = langs + ele + ";"   
+
+
+                langCompetence.lang_provide_therapy_multiple = langs
+
                 langCompetence.lang_provide_therapy_other = form.lang_provide_therapy_other.data
                 
                 #db.session.commit()
@@ -837,7 +888,7 @@ def assessment_form_edit():
                 professionalQualification.country_name = form.country_name.data
                 professionalQualification.language_of_instruction = form.language_of_instruction.data
                 professionalQualification.graduation_date = form.graduation_date.data
-                professionalQualification.level = form.level.data
+                #professionalQualification.level = form.level.data
 
                 professionalQualification.user_id = current_user.id
                 
@@ -856,7 +907,7 @@ def assessment_form_edit():
                 professionalQualification.country_name = form.country_name.data
                 professionalQualification.language_of_instruction = form.language_of_instruction.data
                 professionalQualification.graduation_date = form.graduation_date.data
-                professionalQualification.level = form.level.data
+                #professionalQualification.level = form.level.data
 
                 #db.session.commit()
 
@@ -925,7 +976,7 @@ def assessment_form_edit():
                 suffix = f.filename.rsplit(".", 1)[1]
 
                 if suffix not in app.config['ALLOWED_EXTENSIONS'] :
-                    flash('File type [' + suffix + '] is not allowed!')
+                    flash('File type [' + suffix + '] is not allowed!', 'warning')
 
                     is_error = True
 
@@ -946,14 +997,25 @@ def assessment_form_edit():
 
 
         if not is_error :
+            
+            if request.form.get('button_submit') == 'Submit':
+
+                user = User.query.filter_by(id=current_user.id).first()
+                user.is_registration_form_submit = True                
+
             db.session.commit()
 
-            flash('Form is saved!')
-            #return redirect(url_for('index'))
-            return redirect(url_for('assessment_form_edit'))
 
+            if request.form.get('button_submit')== 'Save':
+                flash('Form is saved!', 'success')
+                return redirect(url_for('assessment_form_edit'))
+
+            if request.form.get('button_submit') == 'Submit':
+                flash('Form is submitted!', 'success')
+                return redirect(url_for('index'))
+            
     else:
-        flash('Error occured!')        
+        flash('Error occured!', 'danger')        
         #print(wk_form.errors)
 
         print(lc_entries_form.errors)
@@ -961,7 +1023,7 @@ def assessment_form_edit():
         print(pr_entries_form.errors)
 
     return render_template( 'assessment_form_edit.html'
-        , title='Qualification Competency Assessment'
+        , title=''
         , p_form=p_form
         , lc_entries_form = lc_entries_form
         , pq_entries_form = pq_entries_form

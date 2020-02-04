@@ -35,6 +35,8 @@ class User(UserMixin, db.Model):
 
     UploadData = db.relationship('UploadData', backref="user")
 
+    is_registration_form_submit = db.Column(db.Boolean, default=False)
+
     def __repr__(self):
         return '<User Email {}>'.format(self.email)
 
@@ -81,14 +83,43 @@ class LangCompetence(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    dominant_lang = db.Column(db.String(30))
+    #dominant_lang = db.Column(db.String(30))
+    _dominant_lang_multiple = db.Column(db.String(100), nullable=False, default='')
     dominant_lang_other = db.Column(db.String(30))
-    lang_training_was_conducted = db.Column(db.String(30))
+
+    #lang_training_was_conducted = db.Column(db.String(30))
+    _lang_training_was_conducted_multiple = db.Column(db.String(100), nullable=False, default='')
     lang_training_was_conducted_other = db.Column(db.String(30))
-    lang_provide_therapy = db.Column(db.String(30))
+
+    #lang_provide_therapy = db.Column(db.String(30))
+    _lang_provide_therapy_multiple = db.Column(db.String(100), nullable=False, default='')
     lang_provide_therapy_other = db.Column(db.String(30))
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    @property
+    def dominant_lang_multiple(self):
+        return [ x for x in self._dominant_lang_multiple.split(';')]
+
+    @dominant_lang_multiple.setter
+    def dominant_lang_multiple(self, value):
+        self._dominant_lang_multiple = value
+
+    @property
+    def lang_training_was_conducted_multiple(self):
+        return [ x for x in self._lang_training_was_conducted_multiple.split(';')]
+
+    @lang_training_was_conducted_multiple.setter
+    def lang_training_was_conducted_multiple(self, value):
+        self._lang_training_was_conducted_multiple = value
+
+    @property
+    def lang_provide_therapy_multiple(self):
+        return [ x for x in self._lang_provide_therapy_multiple.split(';')]
+
+    @lang_provide_therapy_multiple.setter
+    def lang_provide_therapy_multiple(self, value):
+        self._lang_provide_therapy_multiple = value
 
 class ProfessionalQualification(db.Model):
     
