@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h3> {{ title }} </h3>
+
+<h3> {{ name_of_registrant }} </h3>
+
+<table class="table">
+ 		<thead>
+		    <tr>
+		      <th scope="col">Validation Period</th>
+		    </tr>
+		</thead>
+		<tbody>
+		{% for item in cpdActivityEntryHeaders %}
+	 	    <tr valign="top">
+	            <td><a href="/cpd_activities/entry/{{ item.id }}" target="_blank">{{ item.start_date }} - {{ item.end_date }} </a></td>
+	        </tr>
+        {% endfor %}
+    	</tbody>
+    </table>
+
+<p></p>
+{% if prev_url %}
+	<a href="{{ prev_url }}">Previous Page</a>
+{% endif %}
+
+{% if next_url %}
+	<a href="{{ next_url }}">Next Page</a>
+{% endif %}
+
+
+{% endblock %}

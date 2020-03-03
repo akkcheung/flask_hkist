@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+
+{{title}}
+
+<p></p>
+<form method="post" action="/applicants/search">
+	<!--
+    <input type="text" name="Name search"/>
+    <input type="checkbox" name="is_not_check"   {{ 'checked' if is_approve == 'N' }}>&nbsp Application is waiting for check</input>
+    -->
+    <input type="checkbox" name="is_not_approve" {{ 'checked' if is_approve == 'N' }}>&nbsp Application is Waiting for approval</input>
+	<!--
+    <p></p>
+    is_approve: {{ is_approve }}
+	-->
+    
+    <p></p>
+    <input type="submit">
+</form>
+
+<p></p>
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Chinese Name</th>
+            <th scope="col">CPD Activity Form</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for applicant in applicants %}
+        <tr valign="top">
+            <td><a href="/assessment_form/{{ applicant.id }}/edit" target="_blank">{{ applicant.name_of_registrant }}</a></td>
+            <td> {{ applicant.chinese_name }} </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<p></p>
+{% if prev_url %}
+<a href="{{ prev_url }}">Previous Page</a>
+{% endif %}
+{% if next_url %}
+<a href="{{ next_url }}">Next Page</a>
+{% endif %}
+{% endblock %}
