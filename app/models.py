@@ -18,24 +18,27 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(128))
 
     is_admin = db.Column(db.Boolean, default=False)
+    is_checker = db.Column(db.Boolean, default=False)
+
+    is_new_member = db.Column(db.Boolean, default=False)
 
     personDetail = db.relationship('PersonDetail', backref="user")
 
     langCompetenceEntries = db.relationship('LangCompetence', backref="user")
-
     professionalQualificationEntries = db.relationship('ProfessionalQualification', backref="user")
-
     professionalRecognitionEntries = db.relationship('ProfessionalRecognition', backref="user")
-
     WorkExperienceEntries = db.relationship('WorkExperience', backref="user")
 
-    cpdActivityEntries = db.relationship('CpdActivityEntry', backref="user")
+    #cpdActivityEntries = db.relationship('CpdActivityEntry', backref="user")
+    cpdActivityEntryHeaders = db.relationship('CpdActivityEntryHeader', backref="user")
 
     paymentHistory = db.relationship('PaymentHistory', backref="user")
 
     UploadData = db.relationship('UploadData', backref="user")
 
     is_registration_form_submit = db.Column(db.Boolean, default=False)
+
+    random_text_for_password_reset = db.Column(db.String(10))
 
     def __repr__(self):
         return '<User Email {}>'.format(self.email)
@@ -71,7 +74,18 @@ class PersonDetail(db.Model):
     correspondence_addr = db.Column(db.String(200))
     work_addr = db.Column(db.String(200))
 
+   
     is_register = db.Column(db.Boolean, default=False)
+
+    #is_form_submit = db.Column(db.Boolean, default=False)
+    #is_form_check = db.Column(db.Boolean, default=False)
+    #is_form_approve = db.Column(db.Boolean, default=False)
+
+    date_of_submit =  db.Column(db.DateTime)
+    date_of_check =  db.Column(db.DateTime)
+    date_of_approve =  db.Column(db.DateTime)
+
+    is_charge_local_annual_fee = db.Column(db.Boolean, default=False)  # Annual amount depends
 
     #user = models.ForeignKey(User, on_delete=models.CASCADE)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -124,17 +138,17 @@ class LangCompetence(db.Model):
 class ProfessionalQualification(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)   
-    qualification_name = db.Column(db.String(200))
-    issue_authority = db.Column(db.String(200))
+    #qualification_name = db.Column(db.String(200))
+    #issue_authority = db.Column(db.String(200))
     issue_year = db.Column(db.String(10))
 
     qualification_name_in_eng = db.Column(db.String(200))
     issue_authority_in_eng = db.Column(db.String(200))
 
     country_name = db.Column(db.String(100))
-    language_of_instruction = db.Column(db.String(100))
-    graduation_date =  db.Column(db.DateTime)
-    level = db.Column(db.String(100))
+    #language_of_instruction = db.Column(db.String(100))
+    #graduation_date =  db.Column(db.DateTime)
+    #level = db.Column(db.String(100))
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
@@ -183,6 +197,7 @@ class Fee(db.Model):
     description = db.Column(db.String(200), nullable=False)
     currency =  db.Column(db.String(3), nullable=True, default='HKD')
     amount = db.Column(db.Numeric(10,2), nullable=False)
+    type = db.Column(db.String(10), nullable=False) # Local / Overseas
 
 class PaymentHistory(db.Model):
     
@@ -199,11 +214,26 @@ class CpdActivity(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     order_num = db.Column(db.Integer)
     activity_category = db.Column(db.String(300), nullable=False)
+
+    category_description = db.Column(db.Text)
     is_active = db.Column(db.Boolean, default=True)
 
     def __repr__(self):
         return '<Activity Category : {}>'.format(self.activity_category)
 
+
+class CpdActivityEntryHeader(db.Model):
+
+    id = db.Column(db.Integer, primary_key=True)
+    start_date =  db.Column(db.DateTime)
+    end_date =  db.Column(db.DateTime)
+    #approved_date = db.Column(db.DateTime)
+    date_of_submit =  db.Column(db.DateTime)
+
+    payment_id = db.Column(db.Integer, db.ForeignKey(PaymentHistory.id))
+    payment = db.relationship(PaymentHistory, uselist=False)
+
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 class CpdActivityEntry(db.Model):
 #class CpdActivityEntry(Base):
@@ -214,21 +244,21 @@ class CpdActivityEntry(db.Model):
     create_date = db.Column(db.DateTime)
     activity_description = db.Column(db.Text)
     point_awarded = db.Column(db.Numeric(3,1), nullable=False)
-    year = db.Column(db.Integer)
+    #year = db.Column(db.Integer)
 
-    cpd_activity_id = db.Column(db.Integer, db.ForeignKey('cpd_activity.id'))
-    #cpd_activity_id = db.Column(db.Integer, db.ForeignKey(CpdActivity.id))
-
-      
+    #cpd_activity_id = db.Column(db.Integer, db.ForeignKey('cpd_activity.id'))
+    cpd_activity_id = db.Column(db.Integer)
+    
+    '''
     cpd_activity = db.relationship(
         'CpdActivity',
         backref = db.backref('cpd_activity_entry')
     )
+    '''
     
     #cpd_activity = orm.relationship(CpdActivity, backref='cpdActivitiyEntries')
 
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-
+    cpd_activity_entry_header_id = db.Column(db.Integer, db.ForeignKey('cpd_activity_entry_header.id'))
 
 class UploadData(db.Model):
 

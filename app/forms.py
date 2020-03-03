@@ -82,6 +82,17 @@ class PersonDetailForm(FlaskForm):
     correspondence_addr = StringField('Correspondence Address', validators=[DataRequired()])
     work_addr = StringField('Work Address')
 
+    # Application form status 
+    #is_form_submit = BooleanField('Submit')
+    #is_form_check = BooleanField('Check')
+    #is_form_approve = BooleanField('Approve')
+    date_of_submit = DateField('Date of Submit', format='%Y-%m-%d')
+    date_of_check = DateField('Date of Check', format='%Y-%m-%d')
+    date_of_approve = DateField('Date of Approve', format='%Y-%m-%d')
+
+    local_or_overseas = RadioField('Local or Overseas Graduation', choices=[('local', 'Local'), ('overseas', 'Overseas')])
+
+
 class LangCompetenceForm(FlaskForm):
 
     lang_competence_id = HiddenField('id')
@@ -102,7 +113,7 @@ class LangCompetenceForm(FlaskForm):
     lang_training_was_conducted_other = StringField('Other')
 
     #lang_provide_therapy = RadioField('The language(s) in which your will provide speech therapy', choices=[('C','Cantonese'),('E','English'),('P','Putonghua')])
-    lang_provide_therapy_multiple = MultiCheckboxField('The language(s) in which your will provide speech therapy',[Required(message='Please tick your language(s)')], choices=langs)
+    lang_provide_therapy_multiple = MultiCheckboxField('The language(s) in which you will provide speech therapy',[Required(message='Please tick your language(s)')], choices=langs)
 
     lang_provide_therapy_other = StringField('Other')
 
@@ -113,16 +124,16 @@ class LangCompetenceEntriesForm(FlaskForm):
 class ProfessionalQualificationForm(FlaskForm):
 
     professional_qualification_id = HiddenField('id')
-    qualification_name = StringField('Qualification Name')
-    issue_authority = StringField('Issue Authority')
+    #qualification_name = StringField('Qualification Name')
+    #issue_authority = StringField('Issue Authority')
     issue_year = StringField('Issue Year', validators=[DataRequired()])
 
     qualification_name_in_eng = StringField('Qualification Name in English', validators=[DataRequired()])
     issue_authority_in_eng = StringField('Issue Authority in English', validators=[DataRequired()])
 
     country_name = StringField('Country Name')
-    language_of_instruction= StringField('Language of Instruction')
-    graduation_date = DateField('Graduation Date', format='%Y-%m-%d', validators=[Optional()])
+    #language_of_instruction= StringField('Language of Instruction')
+    #graduation_date = DateField('Graduation Date', format='%Y-%m-%d', validators=[Optional()])
     #level = StringField('Level')
 
     #upload_file = FileField('Upload File', validators=[FileAllowed(['png', 'pdf', 'jpg'], "wrong format!")])
@@ -151,8 +162,8 @@ class WorkExperienceForm(FlaskForm):
     work_experience_id = HiddenField('id')
     employer_name = StringField('Employer Name', validators=[DataRequired()])
     job_title = StringField('Job Title', validators=[DataRequired()])
-    from_date = DateField('Start Date', format='%Y-%m-%d', validators=[Optional()])
-    to_date = DateField('End Date', format='%Y-%m-%d', validators=[Optional()])
+    from_date = DateField('From Date', format='%Y-%m-%d', validators=[Optional()])
+    to_date = DateField('To Date', format='%Y-%m-%d', validators=[Optional()])
 
 
 class WorkExperienceEntriesForm(FlaskForm):
@@ -188,14 +199,33 @@ class SignUpForm(FlaskForm):
             raise ValidationError('Must contain at least 1 digit, 1 small letter and 1 capital letter and between 6-8 characters')
 
 
+'''
 class AskQuestionForm(FlaskForm):
     answer = DateField('What is you birthday ?', format='%Y-%m-%d', validators=[DataRequired()])
- 
+'''
 
 class ResetPasswordForm(FlaskForm):
-    signUp = FormField(SignUpForm)
-    askQuestion = FormField(AskQuestionForm)
+    #signUp = FormField(SignUpForm)
+    #askQuestion = FormField(AskQuestionForm)
 
+    password = PasswordField('Enter New Password', validators=[DataRequired()])
+    password2 = PasswordField(
+        'Repeat Password', validators=[DataRequired(), EqualTo('password')])
+
+    #email = StringField('Email', validators=[DataRequired(), Email()])    
+    submit = SubmitField('Submit')
+
+
+class ForgetPasswordForm(FlaskForm):
+    
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Submit')
+
+class CpdActivityEntryHeaderForm(FlaskForm):
+
+    cpd_activity_entry_header = HiddenField('id')
+    start_date = DateField('Start Date', format='%Y-%m-%d', validators=[Optional()])
+    end_date = DateField('Start Date', format='%Y-%m-%d', validators=[Optional()])
 
 class CpdActivityEntryForm(FlaskForm):
 #class CpdActivityEntryForm(ModelForm):
@@ -205,16 +235,13 @@ class CpdActivityEntryForm(FlaskForm):
 
     #id = HiddenField('id')
     cpd_activity_entry_id = HiddenField('id')
-
     activity_description = TextAreaField('Description')
-
     point_awarded = DecimalField('Point awarded', places=1, rounding=None)
-
     cpd_activity_id = HiddenField('cpd_actvity_id')
 
     category = StringField('Category') #foreign key 
+    category_description = StringField('category_description')
 
-    
     '''
     class Meta:
         model = CpdActivityEntry
@@ -246,3 +273,9 @@ class UploadForm(FlaskForm):
 class UploadEntriesForm(FlaskForm):
 
     upload_entries = FieldList(FormField(UploadForm), min_entries=0, max_entries=3)
+
+'''
+class ApplicantSearchForm(FlaskForm):
+
+    is_not_approve = 
+'''

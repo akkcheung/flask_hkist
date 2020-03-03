@@ -2,20 +2,30 @@
 
 {% block content %}
 
-{{title}}
+<h4>{{ title }}</h4>
 
-<h4>Paid Annual Fee HK${{ fee.amount }}</h4>
+{{ err_msg }}
 
-<form action="/charge" method="post">
+{% if not is_error %}
+  <p></p>
+  Annual Fee HK${{ fee.amount }} is outstanding.
 
-  <input type="hidden" id="description" name="description" value="{{ fee.description }}">
-  <input type="hidden" id="amount" name="amount" value="{{ amount|round|int }}">
-  <input type="hidden" id="fee_amount" name="fee_amount" value="{{ fee.amount }}">
+  <p></p>
+  <form action="/charge" method="post">
 
-  <script src="https://checkout.stripe.com/checkout.js" class="stripe-button" data-key="{{ key }}" data-description="{{ fee.description }}" data-amount="{{ amount|round|int }}" data-locale="auto">
-  </script>
+    <input type="hidden" id="description" name="description" value="{{ fee.description }}">
+    <input type="hidden" id="amount" name="amount" value="{{ amount|round|int }}">
+    <input type="hidden" id="fee_amount" name="fee_amount" value="{{ fee.amount }}">
 
-</form>
+    <script src="https://checkout.stripe.com/checkout.js" class="stripe-button" data-key="{{ key }}" data-description="{{ fee.description }}" data-amount="{{ amount|round|int }}" data-locale="auto" >
+    </script>
+
+  </form>
+
+
+  <p></p>
+  (* We use <a href="https://stripe.com/" target="_blank">Stripe Payment gateway</a> )
+{% endif %}
 
 <p></p>
 

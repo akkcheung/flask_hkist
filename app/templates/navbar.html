@@ -21,14 +21,31 @@
       </li>
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Information To Public
+        </a>
+        <div class="dropdown-menu">
+          <a class="dropdown-item" href="/registrants/list">Member of Register of Speech Therapists accredited by Department of Health</a>
+          <a class="dropdown-item" href="/storage/app/media/uploaded-files/SAT/12_HKIST-C-PC-v1.pdf">Patients’ Charter</a>
+          <!--
+         <div class="dropdown-divider"></div>
+         <a class="dropdown-item" href="#">Something else here</a>
+         -->
+        </div>
+      </li> 
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
           Registration
         </a>
         <div class="dropdown-menu">
+          <!-- <a class="dropdown-item" href="#">SignUp</a> -->
+          <!-- <a class="dropdown-item" href="/registrants/list">List of Registrants</a> -->
           <!--
-          <a class="dropdown-item" href="#">SignUp</a>
-          -->
-          <a class="dropdown-item" href="/registrants/list">List of Registrants</a>
           <a class="dropdown-item" href="/page/accreditation-training">Accreditation Of Training</a>
+          <a class="dropdown-item" href="/page/message-registrants">Message To Registrants</a>
+          -->
+          <a class="dropdown-item" href="#">Education Requirements for Speech Therapists in Hong Kong</a>
+          <a class="dropdown-item" href="#">Application Guide</a>
+          <a class="dropdown-item" href="/register">Sign up for application</a>
           <!--
          <div class="dropdown-divider"></div>
          <a class="dropdown-item" href="#">Something else here</a>
@@ -46,15 +63,24 @@
           <a class="dropdown-item" href="/page/disciplinary-enquires">Disciplinary Enquiries</a>
         </div>
       </li>
-      <li class="nav-item">
-        <a class="nav-link" href="/page/cpd">CPD</a>
+      <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Continuing Professional Development
+          </a>
+          <div class="dropdown-menu">
+            <a class="dropdown-item" href="/static/HKIST-A-CPD-v2%20(5).pdf">Continuing Professional Development Framework</a>
+          </div>
       </li>
+      <!--
       <li class="nav-item">
         <a class="nav-link" href="/page/information-public">Information To Public</a>
       </li>
+      -->
+      <!--
       <li class="nav-item">
         <a class="nav-link" href="/page/message-registrants">Message To Registrants</a>
       </li>
+      -->
       <li class="nav-item">
         <a class="nav-link" href="/page/contact">Contact</a>
       </li>
@@ -65,9 +91,15 @@
           My Profile
         </a>
         <div class="dropdown-menu">
-          {% if current_user.is_admin %}
+          <a class="dropdown-item active" href="#"> {{ current_user.email }}</a>
+          <div class="dropdown-divider"></div>
+          {% if current_user.is_admin or current_user.is_checker %}
               <a class="dropdown-item" href="/admin">System Administration</a>
+              <!--
               <a class="dropdown-item" href="/registrants/status/refresh">Refresh Registrants' status</a>
+            -->
+              <a class="dropdown-item" href="/applicants/list">Applicant(s) List</a>        
+              <a class="dropdown-item" href="/cpd_forms/list">CPD Form(s) List</a>        
           {% else %}
             <a class="dropdown-item" href="/assessment_form/edit">Application for registration</a>
             <a class="dropdown-item" href="/payment">Payment</a>

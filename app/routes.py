@@ -1,8 +1,10 @@
 import uuid
 import stripe
 import os
+import random, string
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
 from flask import render_template, flash, redirect, url_for, request
 from flask import current_app
@@ -10,19 +12,23 @@ from flask import abort
 from flask import send_from_directory, send_file
 
 from flask_admin.contrib.sqla import ModelView
+from flask_login import login_user, logout_user, current_user, login_required
+#from flask_session import session
+
 from jinja2 import Markup
 
-from flask_login import login_user, logout_user, current_user, login_required
+#from flask_ckeditor import CKEditorField
+
 from werkzeug.urls import url_parse
 from werkzeug.utils import secure_filename
 
 from app import app, db, login, uploadSet, admin
 
-from app.forms import LoginForm, SignUpForm, PageForm, PersonDetailForm, LangCompetenceForm, ProfessionalQualificationForm, ProfessionalRecognitionForm, WorkExperienceForm, CpdActivityEntryForm, CpdActivityEntriesForm, UploadForm, ResetPasswordForm, PersonDetailRegisterStatusRefreshForm
+from app.forms import LoginForm, SignUpForm, PageForm, PersonDetailForm, LangCompetenceForm, ProfessionalQualificationForm, ProfessionalRecognitionForm, WorkExperienceForm, CpdActivityEntryForm, CpdActivityEntriesForm, UploadForm, ResetPasswordForm, PersonDetailRegisterStatusRefreshForm, ForgetPasswordForm
 
 from app.forms import LangCompetenceEntriesForm, ProfessionalQualificationEntriesForm, ProfessionalRecognitionEntriesForm, WorkExperienceEntriesForm, UploadEntriesForm
 
-from app.models import User, Page, PersonDetail, LangCompetence, ProfessionalQualification, ProfessionalRecognition, WorkExperience, PaymentHistory, Fee, CpdActivity, CpdActivityEntry, UploadData
+from app.models import User, Page, PersonDetail, LangCompetence, ProfessionalQualification, ProfessionalRecognition, WorkExperience, PaymentHistory, Fee, CpdActivity, CpdActivityEntry, CpdActivityEntryHeader, UploadData
 
 stripe_keys = {
   'secret_key': app.config['STRIPE_SECRET_KEY'],
@@ -30,6 +36,12 @@ stripe_keys = {
 }
 
 stripe.api_key = app.config['STRIPE_SECRET_KEY']
+
+def randomString(stringLength):
+    """Generate a random string with the combination of lowercase and uppercase letters """
+
+    letters = string.ascii_letters
+    return ''.join(random.choice(letters) for i in range(stringLength))
 
 @app.route('/')
 @app.route('/index')
@@ -91,6 +103,8 @@ def register():
             #user = User(username=form.username.data, email=form.email.data)
             user = User(email=form.email.data)
             user.set_password(form.password.data)
+            user.is_new_member = True            
+
             db.session.add(user)
             db.session.commit()
 
@@ -100,34 +114,80 @@ def register():
     return render_template('signup.html', title='Sign Up', form=form)
 
 
-@app.route('/reset_pwd', methods=['GET', 'POST'])
-def reset_pwd():
+@app.route('/forget_pwd', methods=['GET', 'POST'])
+def forget_pwd():
 
-    form = ResetPasswordForm()
-  
+    form = ForgetPasswordForm()
+
     if request.method == 'POST' and form.validate():
 
-        user = User.query.filter_by(email=form.signUp.email.data).first()
+        #user = User.query.filter_by(email=form.signUp.email.data).first()
+        user = User.query.filter_by(email=form.email.data).first()
 
         if user is None :            
-            flash('No such user or incorrect Date of Birth!', 'warning')
+            flash('No such user!', 'warning')
 
         else :
 
-            personDetail = PersonDetail.query.filter_by(user_id=user.id).filter_by(date_of_birth=form.askQuestion.answer.data).first()
+            #personDetail = PersonDetail.query.filter_by(user_id=user.id).filter_by(date_of_birth=form.askQuestion.answer.data).first()
+            #personDetail = PersonDetail.query.filter_by(user_id=user.id).first()
 
-            if personDetail is None :
-                flash('No such user or incorrect Date of Birth!', 'warning')
+            #if personDetail is None :
+            #    flash('No such user !', 'warning')
 
-            else :
-                user.set_password(form.signUp.password.data)
-                db.session.commit()
+            #else :
+                #user.set_password(form.signUp.password.data)
+                #db.session.commit()
 
-                flash('Reset password successful!', 'success')
-                return redirect(url_for('login'))
+            #print('debug')
+            #print(randomString(10))
+
+            user.random_text_for_password_reset = randomString(10)
+            db.session.commit()
+
+            flash('Email is sent!', 'success')
+            return redirect(url_for('index'))
+
+    else :        
+        print(form.errors)
+
+    return render_template('forget_pwd.html', title='Forget Password', form=form)
+
+
+@app.route('/reset_pwd/<random_text>', methods=['GET', 'POST'])
+#def reset_pwd():
+def reset_pwd(random_text):
+
+    form = ResetPasswordForm()
+    is_error = False
+
+    if not random_text is None:
+        user = User.query.filter_by(random_text_for_password_reset=random_text).first()
 
     else :
-        print(form.errors)
+        flash('No Password reset password is done!', 'success')
+        return redirect(url_for('login'))
+        
+    if not user is None : 
+
+        if request.method == 'GET':              
+                pass
+
+        if request.method == 'POST' and form.validate():
+
+                user.set_password(form.password.data)
+                user.random_text_for_password_reset = ''
+                db.session.commit()
+
+                flash('Password is reset!, Please login using new password', 'success')
+                return redirect(url_for('login'))
+
+        else :
+            print(form.errors)
+
+    else :
+        flash('No Password reset password is done!', 'warning')
+        return redirect(url_for('login'))
 
     return render_template('reset_pwd.html', title='Reset Password', form=form)
 
@@ -142,8 +202,55 @@ def my_profile():
 @login_required
 def payment():
 
-    fee = Fee.query.filter(Fee.date_effective_to > date.today()).first()
+    personDetail = PersonDetail.query.filter_by(user_id=current_user.id).first() 
 
+    #err_msg = '';
+
+    if not personDetail :
+        flash('Please submit your Application first!', 'warning')
+        return redirect(url_for('index'))
+
+    if not personDetail.date_of_approve :
+        flash('Your Application is not approved yet!', 'warning')
+        return redirect(url_for('index'))
+        
+    last_payment = PaymentHistory.query.filter_by(user_id=current_user.id).order_by(PaymentHistory.date.desc()).first()
+
+    if last_payment: 
+        #last_payment_date = last_payment.date.replace(hour=0, minute=0, second=0, microsecond=0)
+        next_payment_date = last_payment.date.date() + relativedelta(years=1)
+    
+    #print('>debug')
+    #print(next_payment_date) 
+    #print(date.today())
+
+
+    is_error = False
+    #if current_user.is_new_member == None or not current_user.is_new_member :
+
+    if last_payment: 
+        if  last_payment.date.date() >= date.today() and date.today() <= next_payment_date :
+            #err_msg = 'Your last payment is made with 12 months!', 'warning'
+            flash('Your last payment is already make within 12 months!', 'warning')
+            #return redirect(url_for('index'))
+            is_error = True
+
+    fee = Fee.query.filter(Fee.date_effective_to > date.today()).filter_by(type='Overseas').first()
+
+    cpdActivityEntryHeader = CpdActivityEntryHeader.query.filter_by(user_id = current_user.id).order_by(CpdActivityEntryHeader.id.desc()).first()
+
+    if cpdActivityEntryHeader : 
+        '''
+        print('debug')
+        print(cpdActivityEntryHeader.id)
+        '''
+
+        if cpdActivityEntryHeader.end_date.date() > date.today() : 
+            flash('No annual membership fee is overdue yet!', 'warning')
+            is_error = True
+
+    if personDetail.is_charge_local_annual_fee :
+        fee = Fee.query.filter(Fee.date_effective_to > date.today()).filter(type='Local').first()        
     amount = fee.amount * 100
 
     page = request.args.get('page', 1, type=int)
@@ -158,6 +265,8 @@ def payment():
 
     key = app.config['STRIPE_PUBLISHABLE_KEY']
 
+    #print(err_msg)
+
     return render_template('payment.html'
         , title='Payment' 
         , key = key
@@ -165,14 +274,21 @@ def payment():
         , amount = amount
         , payments = payments.items
         , next_url=next_url, prev_url=prev_url
+        #, err_msg = err_msg
+        , is_error = is_error
         )    
 
 
 @app.route('/charge', methods=['POST'])
 @login_required
 def charge():
-        try:
 
+        personDetail = PersonDetail.query.filter_by(user_id = current_user.id).first()
+
+        #last_payment = PaymentHistory.query.filter_by(user_id=current_user.id).order_by("date desc").first()
+        last_payment = PaymentHistory.query.filter_by(user_id=current_user.id).order_by(PaymentHistory.date.desc()).first()
+       
+        try:
             
             charge = stripe.Charge.create(
                 #amount=500,
@@ -184,7 +300,6 @@ def charge():
                 source=request.form.get('stripeToken')
             )
             
-
             #p = PaymentHistory(date=datetime.date.today(), amount=request.POST['fee_amount'], currency='HKD', description=request.POST['description'], user=request.user)
 
             paymentHistory = PaymentHistory()
@@ -195,11 +310,57 @@ def charge():
             paymentHistory.currency = 'HKD'
             paymentHistory.amount = request.form.get('fee_amount')
             paymentHistory.user_id = current_user.id
-
             db.session.add(paymentHistory)
+
+            #personDetail = PersonDetail.query.filter_by(user_id = current_user.id).first()
+            if not personDetail.is_register :
+                personDetail.is_register = True                                
+            
+            if current_user.is_new_member :
+                current_user.is_new_member = False
+
+            cpdActivityEntryHeader = CpdActivityEntryHeader.query.filter_by(user_id = current_user.id).order_by(CpdActivityEntryHeader.id.desc()).first()
+
+            '''
+            if cpdActivityEntryHeader : 
+                if cpdActivityEntryHeader.end_date > date.today() :
+                    flash('No annual membership fee is overdue yet!', 'warning')
+                    return redirect(url_for('payment'))
+            '''
+
+            if cpdActivityEntryHeader : 
+                cpdActivityEntryHeader.payment_id = paymentHistory.id
+
+            cpdActivityEntryHeader_new = CpdActivityEntryHeader()
+
+            if not cpdActivityEntryHeader : 
+                cpdActivityEntryHeader_new.start_date = date.today()
+                cpdActivityEntryHeader_new.end_date = date.today() + relativedelta(years=1) - timedelta(days=1)
+
+            else : 
+                cpdActivityEntryHeader_new.start_date = cpdActivityEntryHeader.end_date + timedelta(days=1)
+                cpdActivityEntryHeader_new.end_date = cpdActivityEntryHeader_new.start_date + relativedelta(years=1) - timedelta(days=1)
+
+            cpdActivityEntryHeader_new.user_id = current_user.id
+
+            db.session.add(cpdActivityEntryHeader_new)
             db.session.commit()
 
-            #context['result'] = "<h2>Thanks, you paid <strong>$" + request.POST['fee_amount'] + "</strong></h2>"
+            for i in range(1,10):
+
+                cpdActivityEntry = CpdActivityEntry()
+                    
+                cpdActivityEntry.cpd_activity_id = i
+                #cpdActivityEntry.year = year
+                #cpdActivityEntry.user_id = current_user.id
+                cpdActivityEntry.point_awarded = 0
+
+                cpdActivityEntry.cpd_activity_entry_header_id = cpdActivityEntryHeader_new.id
+
+                db.session.add(cpdActivityEntry)
+                #db.session.commit()
+
+            db.session.commit()
 
             flash('Thanks for you payment!', 'success')
 
@@ -223,59 +384,64 @@ def charge():
 
 
 @app.route('/cpd_activities/entry', methods=['GET','POST'])
+@app.route('/cpd_activities/entry/<id>', methods=['GET','POST'])
 @login_required
-def cpd_activities_entry():
+#def cpd_activities_entry():
+def cpd_activities_entry(id=None):
 
-    #cpd_activitiy_entries = CpdActivityEntry.query.filter_by(user_id=current_user.id).order_by(CpdActivityEntry.cpd_activity_id).all()
-
-    #today = datetime.date.today()
-    #year = datetime.date.today().year
     today = date.today()
-    year = today.year
+    is_read = False
 
-    #cpd_activitiy_entries = CpdActivityEntry.query.filter_by(user_id=current_user.id).order_by(CpdActivityEntry.cpd_activity_id).all()
+    cpdActivities = CpdActivity.query.order_by('order_num').all()
 
-    cpd_activitiy_entries = CpdActivityEntry.query.filter_by(user_id=current_user.id).filter_by(year=year).order_by(CpdActivityEntry.cpd_activity_id).all()
+    if not current_user.is_admin :
+    
+        if not id:  
+            personDetail = PersonDetail.query.filter_by(user_id = current_user.id).first()
 
-    '''
-    print ('>> debug ')
-    print ("length is ", len(cpd_activitiy_entries))
-    '''
-    if len(cpd_activitiy_entries) == 0 :
+            if personDetail :
+                if not personDetail.date_of_approve:
+                    flash("Please complete your Application form first before proceeding !", "warning") 
+                    return redirect(url_for('index'))
 
-        for i in range(1,10):
+            if current_user.is_new_member :
+                flash("As you are a new member, would you please pay your registration fee before filling CPD !", "warning") 
+                return redirect(url_for('index'))
+    
+    cpdActivityEntryHeader = CpdActivityEntryHeader.query.filter_by(user_id=current_user.id).order_by(CpdActivityEntryHeader.start_date.desc()).first()
 
-                cpdActivityEntry = CpdActivityEntry()
-                
-                cpdActivityEntry.cpd_activity_id = i
-                cpdActivityEntry.year = year
-                cpdActivityEntry.user_id = current_user.id
-                cpdActivityEntry.point_awarded = 0
+    if id:
+        if id.isdigit() :
+            cpdActivityEntryHeader = CpdActivityEntryHeader.query.filter_by(user_id=current_user.id).filter_by(id=id).first()        
 
-                db.session.add(cpdActivityEntry)
-                db.session.commit()
+            if current_user.is_admin :
+                cpdActivityEntryHeader = CpdActivityEntryHeader.query.filter_by(id=id).first()
 
-        cpd_activitiy_entries = CpdActivityEntry.query.filter_by(user_id=current_user.id).filter_by(year=year).order_by(CpdActivityEntry.cpd_activity_id).all()
+    if cpdActivityEntryHeader :
+        cpd_activity_entries = CpdActivityEntry.query.filter_by(cpd_activity_entry_header_id=cpdActivityEntryHeader.id).order_by(CpdActivityEntry.cpd_activity_id).all()
+    
+    else :
+        flash('No CPD Activity form is available!', 'warning')
+        return redirect(url_for('index'))
 
     form = CpdActivityEntriesForm()
 
     if request.method == 'GET':
 
-        #form = CpdActivityEntriesForm()
+        for cpd_activity_entry in cpd_activity_entries :
 
-        for cpd_activity_entry in cpd_activitiy_entries :
-
-            cpdActivity = CpdActivity.query.filter_by(id=cpd_activity_entry.cpd_activity_id).first()
+            #cpdActivity = CpdActivity.query.filter_by(id=cpd_activity_entry.cpd_activity_id).first()
             
             loc_data = {
                     "cpd_activity_entry_id" : cpd_activity_entry.id,
                     "activity_description" : cpd_activity_entry.activity_description,
                     "point_awarded" : cpd_activity_entry.point_awarded,
-                    "cpd_activity_id" : cpd_activity_entry.cpd_activity_id,
-                    "category" : cpdActivity.activity_category
+                    "cpd_activity_id" : cpd_activity_entry.cpd_activity_id
+                    #"category" : cpdActivity.activity_category,
+                    #"category_description" : cpdActivity.category_description
             }
 
-            form.cpd_activity_entries.append_entry(loc_data)       
+            form.cpd_activity_entries.append_entry(loc_data)
 
     elif request.method == 'POST' : #and form.validate():
 
@@ -298,17 +464,121 @@ def cpd_activities_entry():
                 cpdActivityEntry.activity_description = entry.activity_description.data
                 cpdActivityEntry.point_awarded = entry.point_awarded.data
 
-                db.session.commit()
+                #db.session.commit()
 
-            flash('Records are saved!', 'success')
-            return redirect(url_for('index'))
+            #flash('Records are saved!', 'success')
+            #return redirect(url_for('index'))
+
+                
+            total_points = 0
+
+            for cpd_activity_entry in cpd_activity_entries:
+                total_points += cpd_activity_entry.point_awarded
+
+            if request.form.get('button_submit')== 'Save':
+                flash('CPD Activity Record Form  is saved!', 'success')
+   
+            if request.form.get('button_submit') == 'Submit':
+                if total_points >= 15 :
+                    cpdActivityEntry.date_of_submit = date.today()
+                    flash('CPD Activity Record Form is submitted!', 'success')
+                    
+                else :
+                    flash('You have not reach a minimum of 15 CPD-ST points!', 'warning')
+
+            db.session.commit()
+
+            return redirect(url_for('cpd_activities_entry'))
 
         else :
             #print '%s (%s)' % (e.message, type(e))
             print (form.errors)
 
+    total_points = 0
 
-    return render_template('cpd_activities_entry.html', title='CPD Activities Entry', form=form)
+    for cpd_activity_entry in cpd_activity_entries:
+        total_points += cpd_activity_entry.point_awarded
+
+    if cpdActivityEntryHeader.date_of_submit :
+        flash('CPD form is already submit!', 'warning')
+        is_read = True
+
+    if id:
+        if id.isdigit() :
+            is_read = True
+
+    '''
+    print("debug")
+    print(is_read)
+    '''
+
+    return render_template('cpd_activities_entry.html', title='CPD Activities Entry', form=form, cpdActivityEntryHeader=cpdActivityEntryHeader, total_points=total_points, is_read=is_read, cpdActivities=cpdActivities)
+
+@app.route('/cpd_forms/list', methods=['GET'])
+@login_required
+def cpd_form_list():
+
+    page = request.args.get('page', 1, type=int)
+    user_id = current_user.id
+    
+    if current_user.is_admin :
+        user_id = request.args.get('user_id')    
+    
+    #print("> debug")
+    #print(PersonDetail.query.filter_by(is_form_check=False).count())
+    #print(user_id)
+
+    cpdActivityEntryHeaders = CpdActivityEntryHeader.query.all()
+    #cpdActivityEntryHeaders = CpdActivityEntryHeader.query.filter_by(CpdActivityEntryHeader.user_id=user_id)
+
+    return render_template('cpd_forms_list.html', title='CPD forms List', cpdActivityEntryHeaders=cpdActivityEntryHeaders)
+
+
+@app.route('/applicants/list', methods=['GET'])
+@login_required
+def applicant_list():
+
+    page = request.args.get('page', 1, type=int)
+    is_approve = request.args.get('is_approve')    
+
+    #print("> debug")
+    #print(PersonDetail.query.filter_by(is_form_check=False).count())
+
+    #applicants = PersonDetail.query.filter_by(is_form_check=False).order_by(PersonDetail.name_of_registrant).paginate(page, app.config['MEMBERS_PER_PAGE'], False)
+
+    if not is_approve :
+        applicants = PersonDetail.query.order_by(PersonDetail.name_of_registrant).paginate(page, app.config['MEMBERS_PER_PAGE'], False)
+    else :
+
+        if is_approve == 'Y' :
+            applicants = PersonDetail.query.filter(PersonDetail.date_of_approve != None).order_by(PersonDetail.name_of_registrant).paginate(page, app.config['MEMBERS_PER_PAGE'], False)
+
+        if is_approve == 'N' :
+            applicants = PersonDetail.query.filter(PersonDetail.date_of_approve == None).order_by(PersonDetail.name_of_registrant).paginate(page, app.config['MEMBERS_PER_PAGE'], False)
+
+    #next_url = url_for('applicant_list', page=applicants.next_num) \
+    next_url = url_for('applicant_list', page=applicants.next_num, is_approve=is_approve) \
+        if applicants.has_next else None
+
+    #prev_url = url_for('applicant_list', page=applicants.prev_num) \
+    prev_url = url_for('applicant_list', page=applicants.prev_num, is_approve=is_approve) \
+        if applicants.has_prev else None
+    
+    #return render_template('applicant_list.html', title='Applicants List', applicants=applicants.items, next_url=next_url, prev_url=prev_url)
+    return render_template('applicant_list.html', title='Applicants List', applicants=applicants.items, next_url=next_url, prev_url=prev_url, is_approve=is_approve)
+
+
+@app.route('/applicants/search', methods=['POST'])
+@login_required
+def applicant_search():
+    #if form.validate_on_submit():
+    #    search = form.search.data
+
+    if request.form.get('is_not_approve') :
+        return redirect(url_for('applicant_list', is_approve="N"))
+
+    return redirect(url_for('applicant_list', is_approve="Y"))            
+
 
 @app.route('/registrants/list', methods=['GET'])
 #@app.route('/members/list', methods=['GET', 'POST'])
@@ -468,6 +738,12 @@ def upload():
         filename = secure_filename(f.filename)
         uuid_filename = str(uuid.uuid4().hex) +  '.' + f.filename.rsplit(".", 1)[1]
 
+        #debug
+        print(">>debug")
+        print(os.path.join(
+            app.instance_path, 'photos', uuid_filename            
+        ))
+
         f.save(os.path.join(
             app.instance_path, 'photos', uuid_filename            
         ))
@@ -519,9 +795,8 @@ def download_file(id):
 
     #return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
     #return send_from_directory(app.instance_path + '/photos', filename, as_attachment=True)
+    return send_file( app.root_path  + '/../instance/photos/' + uploadData.uuid_filename, attachment_filename=uploadData.filename)
     
-    return send_file(app.instance_path + '/photos/' + uploadData.uuid_filename, attachment_filename=uploadData.filename)
-
 
 @app.route('/uploads/<id>/remove')
 @login_required
@@ -553,13 +828,32 @@ def page_not_found(error):
    return render_template('404.html', title = '404'), 404
 
 
-@app.route('/assessment_form/edit', methods=['GET', 'POST'])
+#@app.route('/assessment_form/edit', methods=['GET', 'POST'])
+@app.route('/assessment_form/edit', methods=['GET', 'POST'], defaults={'id': None})
+@app.route('/assessment_form/<id>/edit', methods=['GET', 'POST'])
 @login_required
-def assessment_form_edit():
+def assessment_form_edit(id):
 
-    if current_user.is_registration_form_submit :
-        flash('Your registration form is submitted!', 'warning')
-        return redirect(url_for('index'))
+    #global current_user_id 
+    current_user_id = current_user.id
+
+    #print('>debug')
+    #print(id)
+
+    if current_user.is_admin or current_user.is_checker :
+        #pass
+        personDetail = PersonDetail.query.filter_by(id=id).first()
+
+        #print('>debug')
+        #print(personDetail)        
+
+        current_user_id = personDetail.user_id
+
+    else :
+
+        if current_user.is_registration_form_submit :
+            flash('Your registration form is submitted already!', 'warning')
+            return redirect(url_for('index'))
 
     p_form = PersonDetailForm(prefix='p-')
 
@@ -574,10 +868,12 @@ def assessment_form_edit():
 
     action = request.args.get('action')
 
-    uploadRecords = UploadData.query.filter_by(user_id=current_user.id).order_by(UploadData.create_date.desc()).all()
+    #uploadRecords = UploadData.query.filter_by(user_id=current_user.id).order_by(UploadData.create_date.desc()).all()
+    uploadRecords = UploadData.query.filter_by(user_id=current_user_id).order_by(UploadData.create_date.desc()).all()
 
     if request.method == 'GET':
-        personDetail = PersonDetail.query.filter_by(user_id=current_user.id).first()
+        #personDetail = PersonDetail.query.filter_by(user_id=current_user.id).first()
+        personDetail = PersonDetail.query.filter_by(user_id=current_user_id).first()
       
         #professionalQualification = ProfessionalQualification.query.filter_by(user_id=current_user.id).first()
         #professionalRecognition = ProfessionalRecognition.query.filter_by(user_id=current_user.id).first()
@@ -587,9 +883,20 @@ def assessment_form_edit():
         if personDetail is None:
             pass
         else :
+
             p_form = PersonDetailForm(obj=personDetail, prefix='p-')
-      
-        lc_entries = LangCompetence.query.filter_by(user_id=current_user.id).all()   
+
+             
+            if personDetail.is_charge_local_annual_fee :
+                p_form.local_or_overseas.default = 'local'
+            else : 
+                p_form.local_or_overseas.default = 'overseas'
+
+            p_form.process(obj=personDetail)
+            
+
+        #lc_entries = LangCompetence.query.filter_by(user_id=current_user.id).all()   
+        lc_entries = LangCompetence.query.filter_by(user_id=current_user_id).all()   
 
         #if lc_entries is None:
         if len(lc_entries) == 0:
@@ -627,22 +934,23 @@ def assessment_form_edit():
 
                 lc_entries_form.lang_competence_entries.append_entry(lc_data)
 
-        pq_entries = ProfessionalQualification.query.filter_by(user_id=current_user.id).all()   
+        #pq_entries = ProfessionalQualification.query.filter_by(user_id=current_user.id).all()   
+        pq_entries = ProfessionalQualification.query.filter_by(user_id=current_user_id).all()   
 
         #if pq_entries is None:
         if len(pq_entries) == 0:
 
             pq_data = {
                 "professional_qualification_id" : 0,
-                "qualification_name" : '',
-                "issue_authority" : '',
+                #"qualification_name" : '',
+                #"issue_authority" : '',
                 "issue_year" : '',
                 "qualification_name_in_eng" : '',
                 "issue_authority_in_eng" : '',
-                "country_name" : '',
-                "language_of_instruction" : '',
-                "graduation_date" : '',
-                "level" : ''
+                "country_name" : ''
+                #"language_of_instruction" : '',
+                #"graduation_date" : '',
+                #"level" : ''
             }
 
             pq_entries_form.professional_qualification_entries.append_entry(pq_data)
@@ -653,15 +961,15 @@ def assessment_form_edit():
             
                 pq_data = {
                     "professional_qualification_id" : pq.id,
-                    "qualification_name" : pq.qualification_name,
-                    "issue_authority" : pq.issue_authority,
+                    #"qualification_name" : pq.qualification_name,
+                    #"issue_authority" : pq.issue_authority,
                     "issue_year" : pq.issue_year,
                     "qualification_name_in_eng" : pq.qualification_name_in_eng,
                     "issue_authority_in_eng" : pq.issue_authority_in_eng,
-                    "country_name" : pq.country_name,
-                    "language_of_instruction" : pq.language_of_instruction,
-                    "graduation_date" : pq.graduation_date,
-                    "level" : pq.level
+                    "country_name" : pq.country_name
+                    #"language_of_instruction" : pq.language_of_instruction,
+                    #"graduation_date" : pq.graduation_date,
+                    #"level" : pq.level
                 }
                 
                 pq_entries_form.professional_qualification_entries.append_entry(pq_data)
@@ -670,15 +978,15 @@ def assessment_form_edit():
 
                 pq_data = {
                     "professional_qualification_id" : 0,
-                    "qualification_name" : '',
-                    "issue_authority" : '',
+                    #"qualification_name" : '',
+                    #"issue_authority" : '',
                     "issue_year" : '',
                     "qualification_name_in_eng" : '',
                     "issue_authority_in_eng" : '',
-                    "country_name" : '',
-                    "language_of_instruction" : '',
-                    "graduation_date" : '',
-                    "level" : ''
+                    "country_name" : ''
+                    #"language_of_instruction" : '',
+                    #"graduation_date" : '',
+                    #"level" : ''
                 }
 
                 pq_entries_form.professional_qualification_entries.append_entry(pq_data)
@@ -686,7 +994,8 @@ def assessment_form_edit():
             elif action == "add_row_pq" :
                 flash('Maximun 3 rows are reached!', 'warning')
 
-        pr_entries = ProfessionalRecognition.query.filter_by(user_id=current_user.id).all()   
+        #pr_entries = ProfessionalRecognition.query.filter_by(user_id=current_user.id).all()   
+        pr_entries = ProfessionalRecognition.query.filter_by(user_id=current_user_id).all()   
 
         #if pr_entries is None:
         if len(pr_entries) == 0:
@@ -731,7 +1040,8 @@ def assessment_form_edit():
 
                 flash('Maximun 3 rows are reached!', 'warning')
 
-        wk_entries = WorkExperience().query.filter_by(user_id=current_user.id).all()   
+        #wk_entries = WorkExperience().query.filter_by(user_id=current_user.id).all()
+        wk_entries = WorkExperience().query.filter_by(user_id=current_user_id).all()   
 
         if len(wk_entries) ==0 :
 
@@ -788,11 +1098,85 @@ def assessment_form_edit():
             #personDetail = PersonDetail.query.filter_by(id=p_form.id.data).first()
             personDetail = PersonDetail.query.get(p_form.id.data)
 
+            if request.form.get('button_submit')== 'Return to applicant for modification':
+
+                #if personDetail.is_form_submit :
+                if personDetail.date_of_submit :
+                    
+                    #personDetail.is_form_check = False
+                    #personDetail.is_form_submit = False
+                    personDetail.date_of_submit = None
+                    personDetail.date_of_check = None
+                    
+                    user = User.query.get(current_user_id)
+                    user.is_registration_form_submit = False
+
+                    #print('>debug')
+                    #print(user)
+
+                    db.session.commit()
+
+                    flash('Returned to applicant for modification!', 'success')
+                
+                else: 
+                    flash('Applicant does not submit the application !', 'warning')
+
+                return redirect(url_for('assessment_form_edit', id=p_form.id.data))
+
+            if request.form.get('button_submit')== 'Check Ok':
+
+                if personDetail.date_of_submit and not personDetail.date_of_check :
+
+                    #personDetail.is_form_check = True
+                    personDetail.date_of_check = date.today()
+                    db.session.commit()
+
+                    flash('Application is checked!', 'success')
+                else :
+
+                    if not personDetail.date_of_submit :
+                        flash('Applicant does not submit the application !', 'warning')
+                    
+                    else:
+                        flash('Applicant is already checked !', 'warning')
+
+                return redirect(url_for('assessment_form_edit', id=p_form.id.data))
+
+            if request.form.get('button_submit')== 'Approve':
+
+                #if personDetail.is_form_check :
+                if personDetail.date_of_check :
+                    #personDetail.is_form_approve = True
+                    personDetail.date_of_approve = date.today()
+                    db.session.commit()
+
+                    #Todo - Send Email
+
+
+                    flash('Registration is approved!', 'success')
+
+                else :
+                    flash('Registration is not checked!', 'warning')
+
+                return redirect(url_for('assessment_form_edit', id=p_form.id.data))
+
         p_form.populate_obj(personDetail)
+
+        '''
+        print('debug')
+        print(p_form.local_or_overseas.data)
+        '''
+
+        if p_form.local_or_overseas.data == 'local' :
+            personDetail.is_charge_local_annual_fee = True
+
+        else : 
+            personDetail.is_charge_local_annual_fee = False
 
         if not p_form.id.data: 
             personDetail.id = None       
-            personDetail.user_id = current_user.id
+            #personDetail.user_id = current_user.id
+            personDetail.user_id = current_user_id
             db.session.add(personDetail)
 
         for form in lc_entries_form.lang_competence_entries :
@@ -809,26 +1193,45 @@ def assessment_form_edit():
                 list_of_langs = form.dominant_lang_multiple.data
 
                 langs = "" 
-
                 for ele in list_of_langs:  
                     langs = langs + ele + ";"   
 
                 langCompetence.dominant_lang_multiple = langs
-
                 langCompetence.dominant_lang_other = form.dominant_lang_other.data
-                langCompetence.lang_training_was_conducted = form.lang_training_was_conducted.data
+                
+                #langCompetence.lang_training_was_conducted = form.lang_training_was_conducted.data
+                list_of_langs = form.lang_training_was_conducted_multiple.data
+                
+                langs = "" 
+                for ele in list_of_langs:  
+                    langs = langs + ele + ";"   
+
+                langCompetence.lang_training_was_conducted_multiple = langs
+
                 langCompetence.lang_training_was_conducted_other = form.lang_training_was_conducted_other.data
-                langCompetence.lang_provide_therapy = form.lang_provide_therapy.data
+                
+                #langCompetence.lang_provide_therapy = form.lang_provide_therapy.data
+                list_of_langs = form.lang_provide_therapy_multiple.data
+
+                langs = "" 
+                for ele in list_of_langs:  
+                    langs = langs + ele + ";"   
+
+                langCompetence.lang_provide_therapy_multiple = langs
+
                 langCompetence.lang_provide_therapy_other = form.lang_training_was_conducted_other.data
 
-                langCompetence.user_id = current_user.id
+                #langCompetence.user_id = current_user.id
+                langCompetence.user_id = current_user_id
 
                 db.session.add(langCompetence)
                 #db.session.commit()
                 
             else :
 
-                langCompetence = LangCompetence.query.filter_by(id=form.lang_competence_id.data).filter_by(user_id=current_user.id).first()
+                #langCompetence = LangCompetence.query.filter_by(id=form.lang_competence_id.data).filter_by(user_id=current_user.id).first()
+                langCompetence = LangCompetence.query.filter_by(id=form.lang_competence_id.data).filter_by(user_id=current_user_id).first()
+
 
                 #langCompetence.dominant_lang = form.dominant_lang.data
 
@@ -880,33 +1283,35 @@ def assessment_form_edit():
 
                 professionalQualification.id = None
 
-                professionalQualification.qualification_name = form.qualification_name.data
-                professionalQualification.issue_authority = form.issue_authority.data
+                #professionalQualification.qualification_name = form.qualification_name.data
+                #professionalQualification.issue_authority = form.issue_authority.data
                 professionalQualification.issue_year = form.issue_year.data
                 professionalQualification.qualification_name_in_eng = form.qualification_name_in_eng.data
                 professionalQualification.issue_authority_in_eng = form.issue_authority_in_eng.data
                 professionalQualification.country_name = form.country_name.data
-                professionalQualification.language_of_instruction = form.language_of_instruction.data
-                professionalQualification.graduation_date = form.graduation_date.data
+                #professionalQualification.language_of_instruction = form.language_of_instruction.data
+                #professionalQualification.graduation_date = form.graduation_date.data
                 #professionalQualification.level = form.level.data
 
-                professionalQualification.user_id = current_user.id
+                #professionalQualification.user_id = current_user.id
+                professionalQualification.user_id = current_user_id
                 
                 db.session.add(professionalQualification)
                 #db.session.commit()
                 
             else :
 
-                professionalQualification = ProfessionalQualification.query.filter_by(id=form.professional_qualification_id.data).filter_by(user_id=current_user.id).first()
+                #professionalQualification = ProfessionalQualification.query.filter_by(id=form.professional_qualification_id.data).filter_by(user_id=current_user.id).first()
+                professionalQualification = ProfessionalQualification.query.filter_by(id=form.professional_qualification_id.data).filter_by(user_id=current_user_id).first()
 
-                professionalQualification.qualification_name = form.qualification_name.data
-                professionalQualification.issue_authority = form.issue_authority.data
+                #professionalQualification.qualification_name = form.qualification_name.data
+                #professionalQualification.issue_authority = form.issue_authority.data
                 professionalQualification.issue_year = form.issue_year.data
                 professionalQualification.qualification_name_in_eng = form.qualification_name_in_eng.data
                 professionalQualification.issue_authority_in_eng = form.issue_authority_in_eng.data
                 professionalQualification.country_name = form.country_name.data
-                professionalQualification.language_of_instruction = form.language_of_instruction.data
-                professionalQualification.graduation_date = form.graduation_date.data
+                #professionalQualification.language_of_instruction = form.language_of_instruction.data
+                #professionalQualification.graduation_date = form.graduation_date.data
                 #professionalQualification.level = form.level.data
 
                 #db.session.commit()
@@ -924,14 +1329,16 @@ def assessment_form_edit():
                 professionalRecognition.membership_type = form.membership_type.data
                 professionalRecognition.expiry_date = form.expiry_date.data
 
-                professionalRecognition.user_id = current_user.id
+                #professionalRecognition.user_id = current_user.id
+                professionalRecognition.user_id = current_user_id
                 
                 db.session.add(professionalRecognition)
                 #db.session.commit()
 
             else : 
 
-                professionalRecognition = ProfessionalRecognition.query.filter_by(id=form.professional_recognition_id.data).filter_by(user_id=current_user.id).first()
+                #professionalRecognition = ProfessionalRecognition.query.filter_by(id=form.professional_recognition_id.data).filter_by(user_id=current_user.id).first()
+                professionalRecognition = ProfessionalRecognition.query.filter_by(id=form.professional_recognition_id.data).filter_by(user_id=current_user_id).first()
 
                 professionalRecognition.country_name = form.country_name.data
                 professionalRecognition.organization_name = form.organization_name.data
@@ -952,14 +1359,16 @@ def assessment_form_edit():
                 workExperience.job_title = form.job_title.data
                 workExperience.from_date = form.from_date.data
                 workExperience.to_date = form.to_date.data    
-                workExperience.user_id = current_user.id
+                #workExperience.user_id = current_user.id
+                workExperience.user_id = current_user_id
 
                 db.session.add(workExperience)
                 #db.session.commit()
 
             else : 
 
-                workExperience = WorkExperience.query.filter_by(id=form.work_experience_id.data).filter_by(user_id=current_user.id).first()
+                #workExperience = WorkExperience.query.filter_by(id=form.work_experience_id.data).filter_by(user_id=current_user.id).first()
+                workExperience = WorkExperience.query.filter_by(id=form.work_experience_id.data).filter_by(user_id=current_user_id).first()
 
                 workExperience.employer_name = form.employer_name.data
                 workExperience.job_title = form.job_title.data
@@ -991,7 +1400,8 @@ def assessment_form_edit():
                     uploadData.uuid_filename = uuid_filename
                     uploadData.create_date = datetime.now()
 
-                    uploadData.user_id = current_user.id
+                    #uploadData.user_id = current_user.id
+                    uploadData.user_id = current_user_id
 
                     db.session.add(uploadData)
 
@@ -1001,10 +1411,13 @@ def assessment_form_edit():
             if request.form.get('button_submit') == 'Submit':
 
                 user = User.query.filter_by(id=current_user.id).first()
-                user.is_registration_form_submit = True                
+                user.is_registration_form_submit = True
+
+                personDetail = PersonDetail.query.filter_by(user_id=current_user.id).first()
+                #personDetail.is_form_submit = True
+                personDetail.date_of_submit = date.today()
 
             db.session.commit()
-
 
             if request.form.get('button_submit')== 'Save':
                 flash('Form is saved!', 'success')
@@ -1012,7 +1425,8 @@ def assessment_form_edit():
 
             if request.form.get('button_submit') == 'Submit':
                 flash('Form is submitted!', 'success')
-                return redirect(url_for('index'))
+                #return redirect(url_for('index'))
+                return redirect(url_for('assessment_form_submit_complete'))
             
     else:
         flash('Error occured!', 'danger')        
@@ -1036,6 +1450,13 @@ def assessment_form_edit():
         )
 
 
+@app.route('/assessment_form/submit_complete', methods=['GET', 'POST'])
+@login_required
+def assessment_form_submit_complete():
+
+    return render_template('assessment_form_submit_complete.html', title = '')
+
+
 ### Flask Admin ###
 
 class AdminModelView(ModelView):
@@ -1057,12 +1478,13 @@ class AdminModelView(ModelView):
     page_size = 50  
 
 class AdminModelEditView(AdminModelView):
-   
+    #form_overrides = dict(category_description=CKEditorField)
     can_edit = True
+
 
 class CpdActivityEntryView(AdminModelView):
 
-    column_searchable_list = ['user.email']  
+    column_searchable_list = ['activity_description']  
 
 class PaymentHistoryView(AdminModelView):
 

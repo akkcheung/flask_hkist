@@ -1,46 +1,80 @@
 {% extends "base.html" %}
 {% block content %}
-<h3>{{title}}</h3>
+
+<!--
+<p></p>
+<a href='/cpd_forms/list'>Previous record(s)</a>
+-->
+
+<p></p>
+<div class="card">
+    <div class="card-header">
+        <h3>{{title}}</h3> 
+    </div>
+    <div class="card-body">
+    Speech Therapists are encouraged to commit to life-long learning to ensure their knowledge and skills are up-to-date in order to deliver the highest level of care to their clients and stakeholders. Registrants of Hong Kong Institute of Speech Therapists Limited (HKIST) must engage in a range of activities to meet a minimum number of Continuous Professional Development for Speech Therapists (CPD-ST) points in order to renew their annual membership of HKIST. Any CPD-ST point earned during the membership renewal period should be immediately submitted in the online CPD Log system. A minimum of 15 CPD-ST points must be reached per annum, with a ceiling of 10 CPD-ST points per activity type.
+    </div>
+</div>
+
+<p></p>
+<hr>
+
+<p class="text-info">Validity Period : {{ cpdActivityEntryHeader.start_date.date() }} - {{ cpdActivityEntryHeader.end_date.date() }} </p>
+
+<p class="text-info">Total Points : {{ total_points }}</p>
+
+<p></p>
 <form action="" method="post">
-
-
-
     <div class="form-row">
-        <div class="form-group col-md-7">
+        <div class="form-group col-md-10">
             <label for="Descripton">Description</label>
         </div>
+        <div class="form-group col-md-1"></div>
         <div class="form-group col-md-1 mb-0">
             <label for="Point Award">Point(s)</label>
         </div>
     </div>
-
     {{ form.hidden_tag() }}
-
-    {% for cpd_activity_entry_form in form.cpd_activity_entries %}
+    {% for cpd_activity_entry_form in form.cpd_activity_entries %}    
     {{ cpd_activity_entry_form.hidden_tag() }}
-
-	<div class="form-row">
-		<div class="form-group col-md-7 mb-0">
-			{{ cpd_activity_entry_form.category (class='form-control-plaintext') }}
-		</div>
-	</div>
-
-    <div class="form-row">
-        <div class="form-group col-md-7 mb-0">
-            {{ cpd_activity_entry_form.activity_description (rows='5',cols='60') }}
-            {% for error in cpd_activity_entry_form.activity_description.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
+   
+    <div class="card">
+         <div class="card-header">
+            {{ loop.index }}. {{ cpdActivities[loop.index0].activity_category }}
         </div>
-        <div class="form-group col-md-1 mb-0">
-            {{ cpd_activity_entry_form.point_awarded }}
-            {% for error in cpd_activity_entry_form.point_awarded.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
+        <div class="card-body">
+            {% autoescape false %}
+                {{ cpdActivities[loop.index0].category_description | replace('\n', '<br/>') }}
+            {% endautoescape %}
+      
+
+            <div class="form-row">
+                <div class="form-group col-md-10 mb-0">
+                    {{ cpd_activity_entry_form.activity_description (class="form-control", rows='5') }}
+                    {% for error in cpd_activity_entry_form.activity_description.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                    {% endfor %}
+                </div>
+                <div class="form-group col-md-1 mb-0"></div>
+                <div class="form-group col-md-1 mb-0">
+                    {{ cpd_activity_entry_form.point_awarded (class="form-control") }}
+                    {% for error in cpd_activity_entry_form.point_awarded.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
     </div>
-    {% endfor %}
+
     <p></p>
-    <button class="btn btn-primary" type="submit">Submit</button>
+    {% endfor %}
+    
+    {# is_read #}
+
+    <input type ="submit" name="button_submit" value="Save" {{ 'disabled' if is_read else '' }}> 
+    <input type ="submit" name="button_submit" value="Submit" {{ 'disabled' if is_read else '' }}>
+        
+    <p></p>
+    (* Press 'Save' button to save the form for editing later)
 </form>
 {% endblock %}

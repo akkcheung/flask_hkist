@@ -93,8 +93,18 @@
 	    </div>
 	</div>
 
+	<div class="form-row ">
+		<div class="form-group col-md-8">
+	        {{ p_form.local_or_overseas.label }}
+	        {{ p_form.local_or_overseas }}
+	        {% for error in p_form.local_or_overseas.errors %}
+	        	<span style="color: red;">[{{ error }}]</span>
+			{% endfor %}
+	    </div>
+	</div>
+
 	<p></p>
-	<h5>Language of Competence : </h5>
+	<h5>Language Competence : </h5>
 
  	{{ lc_entries_form.hidden_tag() }}	
 
@@ -162,33 +172,7 @@
 	{{ pq_entries_form.hidden_tag() }}	
 
 	{% for pq_form in pq_entries_form.professional_qualification_entries %}
-    {{ pq_form.hidden_tag() }}
-
-	<div class="form-row">	
-	    <div class="form-group col-md-4">
-	        {{ pq_form.qualification_name.label }} 
-	        {{ pq_form.qualification_name (class='form-control') }}
-	        {% for error in pq_form.qualification_name.errors %}
-	        	<span style="color: red;">[{{ error }}]</span>
-	        {% endfor %}
-	    </div>
-		    
-	    <div class="form-group col-md-4">
-	        {{ pq_form.issue_authority.label }}
-	        {{ pq_form.issue_authority (class='form-control')}}
-	        {% for error in pq_form.issue_authority.errors %}
-	        	<span style="color: red;">[{{ error }}]</span>
-	        {% endfor %}
-	    </div>
-
-	    <div class="form-group col-md-2">
-	        {{ pq_form.issue_year.label }}
-	        {{ pq_form.issue_year (class='form-control') }}
-	        {% for error in pq_form.issue_year.errors %}
-	        	<span style="color: red;">[{{ error }}]</span>
-	        {% endfor %}
-	    </div>
-	</div>
+    {{ pq_form.hidden_tag() }}	
 
 	<div class="form-row">	
 	 	<div class="form-group col-md-4">
@@ -214,26 +198,15 @@
 	        	<span style="color: red;">[{{ error }}]</span>
 	        {% endfor %}
 	    </div>
-	</div>
-    
-    <div class="form-row">	
-	    <div class="form-group col-md-4">
-	        {{ pq_form.language_of_instruction.label }}
-	        {{ pq_form.language_of_instruction (class='form-control') }}
-	        {% for error in pq_form.language_of_instruction.errors %}
-	        	<span style="color: red;">[{{ error }}]</span>
-	        {% endfor %}
-	    </div>
 
-	    <div class="form-group col-md-2">
-	        {{ pq_form.graduation_date.label }}
-	        {{ pq_form.graduation_date (class='form-control') }}
-	        {% for error in pq_form.graduation_date.errors %}
-	        	<span style="color: red;">[{{ error }}]</span>
-	        {% endfor %}
-	    </div>
-
-	</div>
+        <div class="form-group col-md-2">
+            {{ pq_form.issue_year.label }}
+            {{ pq_form.issue_year (class='form-control') }}
+            {% for error in pq_form.issue_year.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </div>
+	</div>    
 
     {% endfor %}
 
@@ -328,7 +301,7 @@
         	<span style="color: red;">[{{ error }}]</span>
         {% endfor %}
     	</div>
-    	
+
 	</div>
 
  	{% endfor %}
@@ -362,13 +335,50 @@
 	    </tbody>
     </table>
 
+    {% if current_user.is_checker or current_user.is_admin %}
+    <p></p>
+    <h5>Application Status : </h5>
+
+    <div class="form-row">  
+        <div class="form-group col-md-2">            
+            {{ p_form.date_of_submit.label }}
+            {{ p_form.date_of_submit(disabled="disabled") }}
+        </div>
+        <div class="form-group col-md-2">
+            {{ p_form.date_of_check.label }}
+            {{ p_form.date_of_check(disabled="disabled") }}
+        </div>
+        <div class="form-group col-md-2">
+            {{ p_form.date_of_approve.label }}
+            {{ p_form.date_of_approve(disabled="disabled") }}
+        </div>
+    </div>
+    {% endif %}
+
     <p></p>
     <!--
     <button class="btn btn-primary" type="submit">Submit</button>
 	-->
 
-    <input type ="submit" name="button_submit" value="Save">
-    <input type ="submit" name="button_submit" value="Submit">    
+    {% if current_user.is_checker %}
+        <input type ="submit" name="button_submit" value="Check Ok" {# 'disabled' if not p_form.is_form_submit else '' #} >
+        <input type ="submit" name="button_submit" value="Return to applicant for modification">
+
+    {% elif current_user.is_admin %}
+        <input type ="submit" name="button_submit" value="Approve">
+        <!--
+        <input type ="submit" name="button_submit" value="Reject">
+    -->
+
+    {% else %}
+        <input type ="submit" name="button_submit" value="Save"> 
+        <input type ="submit" name="button_submit" value="Submit">
+        
+        <p></p>
+        (* Press 'Save' button to save the form for editing later)
+    {% endif %}
+
+    
 
 </form>
 
