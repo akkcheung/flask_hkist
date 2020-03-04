@@ -250,7 +250,10 @@ def payment():
             is_error = True
 
     if personDetail.is_charge_local_annual_fee :
-        fee = Fee.query.filter(Fee.date_effective_to > date.today()).filter(type='Local').first()        
+        fee = Fee.query.filter(Fee.date_effective_to > date.today()).filter_by(type='Local').first()        
+    else : 
+        fee = Fee.query.filter(Fee.date_effective_to > date.today()).filter_by(type='Overseas').first()        
+
     amount = fee.amount * 100
 
     page = request.args.get('page', 1, type=int)
