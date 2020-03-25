@@ -2,6 +2,7 @@ import uuid
 import stripe
 import os
 import random, string
+import time
 
 from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
@@ -14,6 +15,8 @@ from flask import send_from_directory, send_file
 from flask_admin.contrib.sqla import ModelView
 from flask_login import login_user, logout_user, current_user, login_required
 #from flask_session import session
+from flask_mail import Mail, Message
+from flask_paginate import Pagination, get_page_args
 
 from jinja2 import Markup
 
@@ -22,13 +25,13 @@ from jinja2 import Markup
 from werkzeug.urls import url_parse
 from werkzeug.utils import secure_filename
 
-from app import app, db, login, uploadSet, admin
+from app import app, db, login, uploadSet, admin, mail
 
 from app.forms import LoginForm, SignUpForm, PageForm, PersonDetailForm, LangCompetenceForm, ProfessionalQualificationForm, ProfessionalRecognitionForm, WorkExperienceForm, CpdActivityEntryForm, CpdActivityEntriesForm, UploadForm, ResetPasswordForm, PersonDetailRegisterStatusRefreshForm, ForgetPasswordForm
 
 from app.forms import LangCompetenceEntriesForm, ProfessionalQualificationEntriesForm, ProfessionalRecognitionEntriesForm, WorkExperienceEntriesForm, UploadEntriesForm
 
-from app.models import User, Page, PersonDetail, LangCompetence, ProfessionalQualification, ProfessionalRecognition, WorkExperience, PaymentHistory, Fee, CpdActivity, CpdActivityEntry, CpdActivityEntryHeader, UploadData
+from app.models import User, Page, PersonDetail, LangCompetence, ProfessionalQualification, ProfessionalRecognition, WorkExperience, PaymentHistory, Fee, CpdActivity, CpdActivityEntry, CpdActivityEntryHeader, UploadData, EmailNotice 
 
 stripe_keys = {
   'secret_key': app.config['STRIPE_SECRET_KEY'],
@@ -42,6 +45,95 @@ def randomString(stringLength):
 
     letters = string.ascii_letters
     return ''.join(random.choice(letters) for i in range(stringLength))
+
+
+    '''
+    @app.route('/run-tasks')
+    def run_tasks():
+        for i in range(10):
+            app.apscheduler.add_job(func=scheduled_task, trigger='date', args=[i], id='j'+str(i))
+ 
+    return 'Scheduled several long running tasks.', 200
+
+    def scheduled_task(task_id):
+        for i in range(10):
+            time.sleep(1)
+            print('Task {} running iteration {}'.format(task_id, i))
+    '''
+
+
+@app.route('/run-tasks')
+def run_tasks():
+    i=1
+    app.apscheduler.add_job(func=scheduled_task, trigger='date', args=[i], id='job'+str(i))
+
+def scheduled_task(task_id):
+    #cpdActivityEntryHeader_list = CpdActivityEntryHeader.query.filter_by('is_closed'=None).order_by(id)
+    #todo
+    cpdActivityEntryHeader_list = CpdActivityEntryHeader.query.order_by('id').all()
+
+    #print('debug')
+    #print(cpdActivityEntryHeader_list.count())
+
+    if cpdActivityEntryHeader_list : 
+        for cpd_activity_entry_header in cpdActivityEntryHeader_list :
+
+            email_subject=''
+            email_template=''
+
+            emailNotice = EmailNotice()
+            emailNotice.create_date = datetime.now()
+
+            try:
+                if not cpd_activity_entry_header.is_sent_one_month_before_expiry :
+                    print('if-1')
+                    if not cpd_activity_entry_header.is_sent_three_month_grace_period :  
+                        if date.today() + relativedelta(months=1) > cpd_activity_entry_header.end_date.date() :
+                            email_subject = "Notice : You have 1 month left to fill your CPD Acitivity form"
+                            email_template = 'email_notice_one_month_before_expiry.html' 
+
+                            emailNotice.is_sent_one_month_before_expiry = True
+
+                if not cpd_activity_entry_header.is_sent_three_month_grace_period :  
+                    print('if-2')
+                    if cpd_activity_entry_header.is_sent_one_month_before_expiry :
+                        if cpd_activity_entry_header.end_date.date() > date.today() :
+                            email_subject = "Notice : You are provided 3 months grace period to fill your CPD Acitivity form"
+                            email_template = 'email_notice_three_months_grace_period.html' 
+
+                            emailNotice.is_sent_three_month_grace_period = True
+
+                if not cpd_activity_entry_header.is_sent_expiry_and_membership_remove :
+                    print('if-3')
+                    if cpd_activity_entry_header.is_sent_one_month_before_expiry :
+                        if cpd_activity_entry_header.is_sent_three_month_grace_period :  
+                            #if cpd_activity_entry_header.end_date + relativedelta(months=3) >= datetime.today() :
+                            if cpd_activity_entry_header.end_date.date() + relativedelta(months=3) >= date.today() :
+                                email_subject = "Notice : Your have reach 3 month graceful period to fill yourCPD Acitivity form and your membership is expired automatically"
+                                email_template = 'email_notice_membership_expiry.html' 
+
+                                emailNotice.is_sent_one_month_before_expiry= True
+
+                if emailNotice.is_sent_one_month_before_expiry or emailNotice.is_sent_three_month_grace_period or emailNotice.is_sent_expiry_and_membership_remove :
+                    user = User.query.get(cpd_activity_entry_header.user_id)
+
+                    msg = Message(email_subject, sender=app.config['EMAIL_USERNAME'], recipients=[user.email])
+                    msg.body = ""
+                    msg.html = render_template(email_template)
+
+                    #mail.send(msg)
+                    print(">debug:")
+                    print("sent email to [" + user.email + "] with subject [" + email_subject + "]")  
+
+                    #emailNotice = EmailNotice(email=user.email)
+                    emailNotice.email=user.email
+                    db.session.add(emailNotice)
+
+                    db.session.commit()
+
+            except Exception as e:
+                print(str(e))
+
 
 @app.route('/')
 @app.route('/index')
@@ -145,7 +237,23 @@ def forget_pwd():
             user.random_text_for_password_reset = randomString(10)
             db.session.commit()
 
-            flash('Email is sent!', 'success')
+            try:
+                msg = Message("Forget Password", sender=app.config['MAIL_USERNAME'], recipients=[user.email])
+                msg.body = ""
+                msg.html = render_template('email_notice_reset_pwd.html', random_text=user.random_text_for_password_reset, domain_name=app.config['DOMAIN_NAME'])
+                mail.send(msg)
+
+                emailNotice = EmailNotice(email=user.email)
+                emailNotice.is_sent_password_reset = True
+                emailNotice.create_date = datetime.now()
+                db.session.add(emailNotice)
+                db.session.commit()
+
+                flash('Email is sent!', 'success')
+
+            except Exception as e:
+                flash(str(e), 'warning') 
+
             return redirect(url_for('index'))
 
     else :        
@@ -165,7 +273,7 @@ def reset_pwd(random_text):
         user = User.query.filter_by(random_text_for_password_reset=random_text).first()
 
     else :
-        flash('No Password reset password is done!', 'success')
+        flash('No Password reset password is process!', 'success')
         return redirect(url_for('login'))
         
     if not user is None : 
@@ -186,7 +294,7 @@ def reset_pwd(random_text):
             print(form.errors)
 
     else :
-        flash('No Password reset password is done!', 'warning')
+        flash('No Password reset is process!', 'warning')
         return redirect(url_for('login'))
 
     return render_template('reset_pwd.html', title='Reset Password', form=form)
@@ -198,9 +306,11 @@ def my_profile():
     return render_template('my_profile.html', title='My Profile')    
 
 
-@app.route('/payment', methods=['GET'])
+#@app.route('/payment', methods=['GET'])
+@app.route('/member_profile', methods=['GET'])
 @login_required
-def payment():
+#def payment():
+def member_profile():
 
     personDetail = PersonDetail.query.filter_by(user_id=current_user.id).first() 
 
@@ -225,15 +335,23 @@ def payment():
     #print(date.today())
 
 
-    is_error = False
+    #is_error = False
+    is_outstanding_payment = True
     #if current_user.is_new_member == None or not current_user.is_new_member :
+
+    is_expire = False
+    is_suspend = False
+
+    date_of_expire = datetime.now()
+    date_of_suspend = datetime.now()
 
     if last_payment: 
         if  last_payment.date.date() >= date.today() and date.today() <= next_payment_date :
             #err_msg = 'Your last payment is made with 12 months!', 'warning'
-            flash('Your last payment is already make within 12 months!', 'warning')
+            #flash('Your last payment is already make within 12 months!', 'warning')
             #return redirect(url_for('index'))
-            is_error = True
+            #is_error = True
+            is_outstanding_payment = False
 
     fee = Fee.query.filter(Fee.date_effective_to > date.today()).filter_by(type='Overseas').first()
 
@@ -246,8 +364,17 @@ def payment():
         '''
 
         if cpdActivityEntryHeader.end_date.date() > date.today() : 
-            flash('No annual membership fee is overdue yet!', 'warning')
-            is_error = True
+            #flash('No annual membership fee is overdue yet!', 'warning')
+            #is_error = True
+            is_outstanding_payment = False
+
+        if cpdActivityEntryHeader.is_sent_three_month_grace_period :
+            is_expire = True
+            date_of_expire = cpdActivityEntryHeader.end_date + timedelta(days=1)
+
+        if cpdActivityEntryHeader.is_sent_expiry_and_membership_remove :
+            is_suspend = True
+            date_of_suspend = cpdActivityEntryHeader.end_date + timedelta(months=3) - timedelat(days=1)
 
     if personDetail.is_charge_local_annual_fee :
         fee = Fee.query.filter(Fee.date_effective_to > date.today()).filter_by(type='Local').first()        
@@ -260,25 +387,35 @@ def payment():
     
     payments = PaymentHistory.query.filter_by(user_id=current_user.id).order_by(PaymentHistory.date.desc()).paginate(page, app.config['PAYMENT_HISTORY_RECORD_PER_PAGE'], False)
 
-    next_url = url_for('payment', page=payments.next_num) \
+    #next_url = url_for('payment', page=payments.next_num) \
+    next_url = url_for('member_profile', page=payments.next_num) \
         if payments.has_next else None
 
-    prev_url = url_for('payment', page=payments.prev_num) \
+    #prev_url = url_for('payment', page=payments.prev_num) \
+    prev_url = url_for('member_profile', page=payments.prev_num) \
         if payments.has_prev else None
 
     key = app.config['STRIPE_PUBLISHABLE_KEY']
 
     #print(err_msg)
 
-    return render_template('payment.html'
-        , title='Payment' 
+    #return render_template('payment.html'
+    return render_template('member_profile.html'
+        , title='Member\'s Profile' 
         , key = key
         , fee = fee
         , amount = amount
         , payments = payments.items
         , next_url=next_url, prev_url=prev_url
         #, err_msg = err_msg
-        , is_error = is_error
+        #, is_error = is_error
+        , is_outstanding_payment = is_outstanding_payment
+        , personDetail = personDetail
+        , cpdActivityEntryHeader = cpdActivityEntryHeader
+        , is_suspend = is_suspend
+        , date_of_suspend = date_of_suspend 
+        , is_expire = is_expire
+        , date_of_expire = date_of_expire 
         )    
 
 
@@ -333,6 +470,7 @@ def charge():
 
             if cpdActivityEntryHeader : 
                 cpdActivityEntryHeader.payment_id = paymentHistory.id
+                cpdActivityEntryHeader.is_closed = True
 
             cpdActivityEntryHeader_new = CpdActivityEntryHeader()
 
@@ -365,7 +503,7 @@ def charge():
 
             db.session.commit()
 
-            flash('Thanks for you payment!', 'success')
+            flash('Thanks for you payment. Your payment is received. Please check your name on the Register of Speech Therapists accredited by Department of Health', 'success')
 
         except stripe.error.StripeError as e:
             #context['result'] = "<h2>Something goes wrong</h2>"
@@ -383,7 +521,8 @@ def charge():
 
         #return render(request, 'charge.html')
         #return render(request, 'charge.html', context)
-        return redirect(url_for('payment'))
+        #return redirect(url_for('payment'))
+        return redirect(url_for('member_profile'))
 
 
 @app.route('/cpd_activities/entry', methods=['GET','POST'])
@@ -541,34 +680,71 @@ def cpd_form_list():
 @login_required
 def applicant_list():
 
-    page = request.args.get('page', 1, type=int)
+    if not current_user.is_admin :
+        abort(404)
+
+    #page = request.args.get('page', 1, type=int)
+    page, per_page, offset = get_page_args(page_parameter='page', per_page_parameter='per_page')
+
     is_approve = request.args.get('is_approve')    
 
     #print("> debug")
     #print(PersonDetail.query.filter_by(is_form_check=False).count())
 
     #applicants = PersonDetail.query.filter_by(is_form_check=False).order_by(PersonDetail.name_of_registrant).paginate(page, app.config['MEMBERS_PER_PAGE'], False)
+    applicantObjectList = []
 
     if not is_approve :
-        applicants = PersonDetail.query.order_by(PersonDetail.name_of_registrant).paginate(page, app.config['MEMBERS_PER_PAGE'], False)
+        #applicants = PersonDetail.query.order_by(PersonDetail.name_of_registrant).paginate(page, app.config['MEMBERS_PER_PAGE'], False)
+        applicants = PersonDetail.query.order_by(PersonDetail.name_of_registrant)
     else :
 
         if is_approve == 'Y' :
-            applicants = PersonDetail.query.filter(PersonDetail.date_of_approve != None).order_by(PersonDetail.name_of_registrant).paginate(page, app.config['MEMBERS_PER_PAGE'], False)
+            #applicants = PersonDetail.query.filter(PersonDetail.date_of_approve != None).order_by(PersonDetail.name_of_registrant).paginate(page, app.config['MEMBERS_PER_PAGE'], False)
+            applicants = PersonDetail.query.filter(PersonDetail.date_of_approve != None).order_by(PersonDetail.name_of_registrant)
 
         if is_approve == 'N' :
-            applicants = PersonDetail.query.filter(PersonDetail.date_of_approve == None).order_by(PersonDetail.name_of_registrant).paginate(page, app.config['MEMBERS_PER_PAGE'], False)
+            #applicants = PersonDetail.query.filter(PersonDetail.date_of_approve == None).order_by(PersonDetail.name_of_registrant).paginate(page, app.config['MEMBERS_PER_PAGE'], False)
+            applicants = PersonDetail.query.filter(PersonDetail.date_of_approve == None).order_by(PersonDetail.name_of_registrant)
 
+    for applicant in applicants:
+
+        cpd_activity_entry_header = CpdActivityEntryHeader.query.filter(CpdActivityEntryHeader.user_id == applicant.user_id).filter(CpdActivityEntryHeader.is_closed != True).first();
+
+        cpd_activity_entry_header_id = ''
+        valid_period = ''
+        
+        if cpd_activity_entry_header :
+            valid_period = cpd_activity_entry_header.start_date.strftime("%Y/%m/%d") + ' - ' + cpd_activity_entry_header.end_date.strftime("%Y/%m/%d")
+            cpd_activity_entry_header_id = cpd_activity_entry_header.id
+
+        applicantObject = { 
+            'id' : applicant.id
+            , 'name_of_registrant' : applicant.name_of_registrant 
+            , 'chinese_name' : applicant.chinese_name
+            , 'valid_period' : valid_period
+            , 'cpd_activity_entry_header_id' : cpd_activity_entry_header_id
+        }
+
+        applicantObjectList.append(applicantObject)
+
+    total = len(applicantObjectList)
+    
     #next_url = url_for('applicant_list', page=applicants.next_num) \
-    next_url = url_for('applicant_list', page=applicants.next_num, is_approve=is_approve) \
-        if applicants.has_next else None
+    #next_url = url_for('applicant_list', page=applicants.next_num, is_approve=is_approve) \
+        #if applicants.has_next else None
 
     #prev_url = url_for('applicant_list', page=applicants.prev_num) \
-    prev_url = url_for('applicant_list', page=applicants.prev_num, is_approve=is_approve) \
-        if applicants.has_prev else None
+    #prev_url = url_for('applicant_list', page=applicants.prev_num, is_approve=is_approve) \
+        #if applicants.has_prev else None
     
     #return render_template('applicant_list.html', title='Applicants List', applicants=applicants.items, next_url=next_url, prev_url=prev_url)
-    return render_template('applicant_list.html', title='Applicants List', applicants=applicants.items, next_url=next_url, prev_url=prev_url, is_approve=is_approve)
+    #return render_template('applicant_list.html', title='Applicants List', applicants=applicants.items, next_url=next_url, prev_url=prev_url, is_approve=is_approve)
+
+    pagination_applicants = applicantObjectList[offset: offset + per_page]
+    pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap4')
+
+    return render_template('applicant_list.html', title='Applicants List', applicants=pagination_applicants, page=page, per_page=per_page, pagination=pagination, is_approve=is_approve)
 
 
 @app.route('/applicants/search', methods=['POST'])

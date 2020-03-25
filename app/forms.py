@@ -69,16 +69,20 @@ class PersonDetailForm(FlaskForm):
         'Title',
         choices=[('Mr', 'Mr'), ('Ms', 'Ms'), ('Mrs', 'Mrs'), ('Prof', 'Prof'), ('Dr', 'Dr')]
     )
-    date_of_birth = DateField('Date of birth', format='%Y-%m-%d')
-    country_of_birth = StringField('Country Of Birth')
 
-    name_of_registrant = StringField('Name of Registrant', validators=[DataRequired()])
-    chinese_name = StringField('Chinese Name')
+    #date_of_birth = DateField('Date of birth', format='%Y-%m-%d')
+    #country_of_birth = StringField('Country Of Birth')
+
+    name_of_registrant = StringField('Name in English', validators=[DataRequired()])
+    chinese_name = StringField('Name in Chinese')
     online_id = StringField('Online ID')
+
     #online_registration_date = db.Column(db.DateTime)
     #email = db.Column(db.String(100), index=True, unique=True)
-    mobile_phone = StringField('Mobile Phone', validators=[DataRequired()])
-    office_phone = StringField('Office Phone')
+
+    mobile_phone = StringField('Contact number (Mobile)', validators=[DataRequired()])
+    office_phone = StringField('Contact number (Office)')
+
     correspondence_addr = StringField('Correspondence Address', validators=[DataRequired()])
     work_addr = StringField('Work Address')
 

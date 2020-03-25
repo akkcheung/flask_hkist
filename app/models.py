@@ -233,6 +233,12 @@ class CpdActivityEntryHeader(db.Model):
     payment_id = db.Column(db.Integer, db.ForeignKey(PaymentHistory.id))
     payment = db.relationship(PaymentHistory, uselist=False)
 
+    is_closed = db.Column(db.Boolean, default=False)
+
+    is_sent_one_month_before_expiry = db.Column(db.Boolean, default=False)
+    is_sent_three_month_grace_period = db.Column(db.Boolean, default=False)
+    is_sent_expiry_and_membership_remove = db.Column(db.Boolean, default=False)
+
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 class CpdActivityEntry(db.Model):
@@ -269,6 +275,19 @@ class UploadData(db.Model):
     uuid_filename = db.Column(db.Text)
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+class EmailNotice(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    create_date = db.Column(db.DateTime)
+    #email = db.Column(db.String(100), index=True, unique=True)
+    email = db.Column(db.String(100))
+
+    is_sent_password_reset = db.Column(db.Boolean, default=False)
+
+    is_sent_one_month_before_expiry = db.Column(db.Boolean)
+    is_sent_three_month_grace_period = db.Column(db.Boolean)
+    is_sent_expiry_and_membership_remove = db.Column(db.Boolean)
 
 class CsvData(db.Model):
 

@@ -10,6 +10,8 @@ from flask_ckeditor import CKEditor
 from flask_uploads import UploadSet, IMAGES, DOCUMENTS, DEFAULTS, configure_uploads,patch_request_class
 
 from flask_admin import Admin, BaseView, expose
+from flask_apscheduler import APScheduler
+from flask_mail import Mail
 
 #import logging
 
@@ -23,6 +25,20 @@ app = Flask(__name__)
 
 app.config.from_object(Config)
 app.config['MAX_CONTENT_LENGTH'] = 3 * 1024 * 1024
+
+
+
+app.config.update(
+    DEBUG=True,
+    #EMAIL SETTINGS
+    MAIL_SERVER='smtp.gmail.com',
+    MAIL_PORT=465,
+    MAIL_USE_SSL=True,
+    MAIL_USERNAME = app.config['MAIL_USERNAME'],
+    MAIL_PASSWORD = app.config['MAIL_PASSWORD']
+)
+mail=Mail()
+mail.init_app(app)
 
 ckeditor.init_app(app)
 
@@ -41,6 +57,10 @@ patch_request_class(app)
 admin = Admin(name="", template_mode="bootstrap3")
 #admin = Admin(name="HKIST Admin Area", template_mode="bootstrap3", index_view="AdminModelView")
 admin.init_app(app)
+
+scheduler = APScheduler()
+scheduler.init_app(app)
+scheduler.start()
 
 
 from app import routes, models

@@ -26,7 +26,12 @@ for csvData in csvData_records :
     else:
 
         personDetail = PersonDetail.query.filter_by(user_id = user.id).first()
+    
+        if personDetail :
 
+            personDetail.online_id = csvData.online_id
+
+    '''
         if personDetail is None :
 
             personDetail = PersonDetail(
@@ -183,6 +188,7 @@ for csvData in csvData_records :
                     user_id = user.id
                 )
 
-                db.session.add(workExperience_e)
+              db.session.add(workExperience_e)
+    '''
 
     db.session.commit()

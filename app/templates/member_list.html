@@ -9,6 +9,7 @@
 		    <tr>
 		      <th scope="col">Name</th>
 		      <th scope="col">Chinese Name</th>
+		      <th scope="col">Member ID</th>
 		    </tr>
 		</thead>
 		<tbody>
@@ -16,6 +17,13 @@
 	 	    <tr valign="top">
 	            <td> {{ member.name_of_registrant }} </td>
 	            <td> {{ member.chinese_name }} </td>
+                <td>
+                {% if member.online_id|length %}
+                    {{ member.online_id }}
+                {% else %}
+                    {{ member.id }}
+                {% endif %}
+                </td>
 	        </tr>
         {% endfor %}
     	</tbody>
