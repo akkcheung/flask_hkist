@@ -681,7 +681,8 @@ def cpd_form_list():
 def applicant_list():
 
     if not current_user.is_admin :
-        abort(404)
+        if not  current_user.is_checker :
+            abort(404)
 
     #page = request.args.get('page', 1, type=int)
     page, per_page, offset = get_page_args(page_parameter='page', per_page_parameter='per_page')
