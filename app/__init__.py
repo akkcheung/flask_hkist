@@ -33,7 +33,8 @@ app.config.update(
     #EMAIL SETTINGS
     MAIL_SERVER= app.config['MAIL_SERVER'],
     MAIL_PORT=app.config['MAIL_PORT'],
-    MAIL_USE_SSL=True,
+    #MAIL_USE_SSL=True,
+    MAIL_USE_TLS=True,
     MAIL_USERNAME = app.config['MAIL_USERNAME'],
     MAIL_PASSWORD = app.config['MAIL_PASSWORD']
 )
