@@ -33,7 +33,7 @@
         <tr valign="top">
             <td><a href="/assessment_form/{{ applicant.id }}/edit" target="_blank">{{ applicant.name_of_registrant }}</a></td>
             <td> {{ applicant.chinese_name }} </td>
-            <td><a href="/cpd_activity_entry/{{ applicant.cpd_activity_entry_header_id }}" target="_blank">{{ applicant.valid_period }}</a></td>
+            <td><a href="/cpd_activities/{{ applicant.cpd_activity_entry_header_id }}" target="_blank">{{ applicant.valid_period }}</a></td>
         </tr>
         {% endfor %}
     </tbody>

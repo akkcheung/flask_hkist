@@ -7,23 +7,24 @@
 <table class="table">
  		<thead>
 		    <tr>
+		      <th scope="col">Member ID</th>
 		      <th scope="col">Name</th>
 		      <th scope="col">Chinese Name</th>
-		      <th scope="col">Member ID</th>
 		    </tr>
 		</thead>
 		<tbody>
 		{% for member in members %}
 	 	    <tr valign="top">
-	            <td> {{ member.name_of_registrant }} </td>
-	            <td> {{ member.chinese_name }} </td>
                 <td>
-                {% if member.online_id|length %}
-                    {{ member.online_id }}
+                
+                {% if member.old_id %}
+                   ST{{ '%06d' % member.old_id }}
                 {% else %}
-                    {{ member.id }}
+                   ST{{ '%06d' % member.id }}
                 {% endif %}
                 </td>
+	            <td> {{ member.name_of_registrant }} </td>
+	            <td> {{ member.chinese_name }} </td>
 	        </tr>
         {% endfor %}
     	</tbody>

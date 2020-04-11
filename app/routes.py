@@ -346,7 +346,7 @@ def member_profile():
     date_of_suspend = datetime.now()
 
     if last_payment: 
-        if  last_payment.date.date() >= date.today() and date.today() <= next_payment_date :
+        if  last_payment.date.date() >= date.today() and date.today() < next_payment_date :
             #err_msg = 'Your last payment is made with 12 months!', 'warning'
             #flash('Your last payment is already make within 12 months!', 'warning')
             #return redirect(url_for('index'))
@@ -526,7 +526,7 @@ def charge():
 
 
 @app.route('/cpd_activities/entry', methods=['GET','POST'])
-@app.route('/cpd_activities/entry/<id>', methods=['GET','POST'])
+@app.route('/cpd_activities/<id>', methods=['GET','POST'])
 @login_required
 #def cpd_activities_entry():
 def cpd_activities_entry(id=None):
@@ -536,12 +536,16 @@ def cpd_activities_entry(id=None):
 
     cpdActivities = CpdActivity.query.order_by('order_num').all()
 
+    name_of_registrant = ''
+
     if not current_user.is_admin :
     
         if not id:  
             personDetail = PersonDetail.query.filter_by(user_id = current_user.id).first()
 
             if personDetail :
+                name_of_registrant = personDetail.name_of_registrant
+
                 if not personDetail.date_of_approve:
                     flash("Please complete your Application form first before proceeding !", "warning") 
                     return redirect(url_for('index'))
@@ -555,11 +559,13 @@ def cpd_activities_entry(id=None):
     if id:
         if id.isdigit() :
             cpdActivityEntryHeader = CpdActivityEntryHeader.query.filter_by(user_id=current_user.id).filter_by(id=id).first()        
-
             if current_user.is_admin :
                 cpdActivityEntryHeader = CpdActivityEntryHeader.query.filter_by(id=id).first()
 
     if cpdActivityEntryHeader :
+        personDetail = PersonDetail.query.filter_by(user_id = cpdActivityEntryHeader.user_id).first()
+        name_of_registrant = personDetail.name_of_registrant
+
         cpd_activity_entries = CpdActivityEntry.query.filter_by(cpd_activity_entry_header_id=cpdActivityEntryHeader.id).order_by(CpdActivityEntry.cpd_activity_id).all()
     
     else :
@@ -654,7 +660,7 @@ def cpd_activities_entry(id=None):
     print(is_read)
     '''
 
-    return render_template('cpd_activities_entry.html', title='CPD Activities Entry', form=form, cpdActivityEntryHeader=cpdActivityEntryHeader, total_points=total_points, is_read=is_read, cpdActivities=cpdActivities)
+    return render_template('cpd_activities_entry.html', title='CPD Activities Entry', form=form, cpdActivityEntryHeader=cpdActivityEntryHeader, total_points=total_points, is_read=is_read, cpdActivities=cpdActivities, name_of_registrant=name_of_registrant)
 
 @app.route('/cpd_forms/list', methods=['GET'])
 @login_required
@@ -915,21 +921,41 @@ def upload():
 
     elif form.validate_on_submit():
         f = form.photo.data
+        #filename = os.fsencode(f.filename)
+        filename = f.filename
+        filename = filename.encode('utf-8')
         filename = secure_filename(f.filename)
         uuid_filename = str(uuid.uuid4().hex) +  '.' + f.filename.rsplit(".", 1)[1]
 
-        #debug
-        print(">>debug")
-        print(os.path.join(
-            app.instance_path, 'photos', uuid_filename            
-        ))
+        if current_user.is_admin :
 
-        f.save(os.path.join(
-            app.instance_path, 'photos', uuid_filename            
-        ))
+            '''
+            print(">>debug")
+            print(os.path.join(
+                os.path.abspath("./"), 'app/static', filename
+            ))
+            '''
+
+            f.save(os.path.join(
+                os.path.abspath("./"), 'app/static', filename
+            ))
+
+        else: 
+
+            '''
+            print(">>debug")
+            print(os.path.join(
+                app.instance_path, 'photos', uuid_filename            
+            ))
+            '''
+
+            f.save(os.path.join(
+                app.instance_path, 'photos', uuid_filename            
+            ))
 
         uploadData = UploadData()
-        uploadData.filename = f.filename
+        #uploadData.filename = f.filename
+        uploadData.filename = filename
         #uploadData.uuid_filename = uuid_filename + '.' + f.filename.rsplit(".", 1)[1]
         uploadData.uuid_filename = uuid_filename
         uploadData.create_date = datetime.now()
@@ -947,7 +973,7 @@ def upload():
     else :
         print (form.errors)
 
-    return render_template('upload.html', form=form, title='upload', uploadRecords=uploadRecords.items, next_url=next_url, prev_url=prev_url )
+    return render_template('upload.html', form=form, title='Upload file(s)', uploadRecords=uploadRecords.items, next_url=next_url, prev_url=prev_url )
 
 
 #@app.route('/uploads/<path:filename>')
@@ -987,13 +1013,18 @@ def remove_file(id):
     if uploadData is not None and uploadData.user_id == current_user.id:
 
         try: 
-            os.remove(app.instance_path + '/photos/' + uploadData.uuid_filename)
+            if current_user.is_admin :
+                os.remove(os.path.abspath("./") + '/app/static/' + uploadData.filename)
+
+            else :
+                os.remove(app.instance_path + '/photos/' + uploadData.uuid_filename)
+
+            db.session.delete(uploadData)
+            db.session.commit()
 
         except FileNotFoundError:
-            flash('The file doesn\`t not exist!', 'warning')
+            flash('The file doesn\'t not exist!', 'warning')
 
-        db.session.delete(uploadData)
-        db.session.commit()
 
     from_url = request.args.get('from')
 
@@ -1006,6 +1037,10 @@ def remove_file(id):
 @app.errorhandler(404)
 def page_not_found(error):
    return render_template('404.html', title = '404'), 404
+
+@app.errorhandler(413)
+def request_entity_too_large(error):
+   return render_template('413.html', title = '413'), 413
 
 
 #@app.route('/assessment_form/edit', methods=['GET', 'POST'])
@@ -1707,6 +1742,7 @@ class UploadDataView(AdminModelView):
     column_formatters = {
         'filename': _filename_formatter
     }
+
 
 
 #admin.add_view(AdminModelView(User, db.session, category="Members Area"))

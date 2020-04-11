@@ -74,6 +74,7 @@ class PersonDetail(db.Model):
     correspondence_addr = db.Column(db.String(200))
     work_addr = db.Column(db.String(200))
 
+    old_id = db.Column(db.Integer())
    
     is_register = db.Column(db.Boolean, default=False)
 

@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h1>{{ title }}</h1>
+<h3>{{ title }}</h3>
 
 <form action="/upload" method="POST" enctype="multipart/form-data">
     {{ form.hidden_tag() }}
@@ -10,17 +10,33 @@
     <input type="submit">
 </form>
 
-{% for uploadRecord in uploadRecords %}
+<p></p>
 
- 	<table>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Filename</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for uploadRecord in uploadRecords %}
+
         <tr valign="top">
         	<td> {{ uploadRecord.create_date }} </td>
-            <td> <a href="uploads/{{ uploadRecord.id }}"> {{ uploadRecord.filename }} </a></td>
-            <td> <a href="uploads/{{ uploadRecord.id }}/remove"> X </a></td>
+            {% if current_user.is_admin %}
+                <td> <a href="static/{{ uploadRecord.filename }}" target="_blank"> {{ uploadRecord.filename }} </a></td>
+                <td> <a href="uploads/{{ uploadRecord.id }}/remove"> X </a></td>
+            {% else %}
+                <td> <a href="uploads/{{ uploadRecord.id }}"> {{ uploadRecord.filename }} </a></td>
+                <td> <a href="uploads/{{ uploadRecord.id }}/remove"> X </a></td>
+            {% endif %}
         </tr>
-    </table>
+    {% endfor %}
+    </tbody>    
+</table>
 
-{% endfor %}
 
 {% if prev_url %}
 	<a href="{{ prev_url }}">Previous Page</a>
