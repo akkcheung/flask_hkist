@@ -61,7 +61,7 @@ def randomString(stringLength):
             print('Task {} running iteration {}'.format(task_id, i))
     '''
 
-
+'''
 @app.route('/run-tasks')
 def run_tasks():
     i=1
@@ -133,6 +133,7 @@ def scheduled_task(task_id):
 
             except Exception as e:
                 print(str(e))
+'''
 
 
 @app.route('/')

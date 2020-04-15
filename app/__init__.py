@@ -28,13 +28,14 @@ app.config['MAX_CONTENT_LENGTH'] = 3 * 1024 * 1024
 
 
 
+
 app.config.update(
     DEBUG=True,
     #EMAIL SETTINGS
     MAIL_SERVER= app.config['MAIL_SERVER'],
     MAIL_PORT=app.config['MAIL_PORT'],
-    #MAIL_USE_SSL=True,
-    MAIL_USE_TLS=True,
+    #MAIL_USE_SSL=True,  #gmail use ssl
+    MAIL_USE_TLS=True, 
     MAIL_USERNAME = app.config['MAIL_USERNAME'],
     MAIL_PASSWORD = app.config['MAIL_PASSWORD']
 )
