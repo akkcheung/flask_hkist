@@ -307,11 +307,11 @@ def my_profile():
     return render_template('my_profile.html', title='My Profile')    
 
 
-#@app.route('/payment', methods=['GET'])
 @app.route('/member_profile', methods=['GET'])
 @login_required
-#def payment():
 def member_profile():
+
+    abort(404)  # disable temporarily
 
     personDetail = PersonDetail.query.filter_by(user_id=current_user.id).first() 
 
@@ -1066,6 +1066,7 @@ def assessment_form_edit(id):
         current_user_id = personDetail.user_id
 
     else :
+        abort(404) # disable temporarily
 
         if current_user.is_registration_form_submit :
             flash('Your registration form is submitted already!', 'warning')
