@@ -73,8 +73,8 @@
     
     {# is_read #}
 
-    <input type ="submit" name="button_submit" value="Save" disabled={{ 'disabled' if is_read else '' }}> 
-    <input type ="submit" name="button_submit" value="Submit" disabled={{ 'disabled' if is_read else '' }}>
+    <input type ="submit" name="button_submit" value="Save" {{ 'disabled' if is_read else '' }}>
+    <input type ="submit" name="button_submit" value="Submit" {{ 'disabled' if is_read else '' }}>
         
     <p></p>
     (* Press 'Save' button to save the form for editing later)

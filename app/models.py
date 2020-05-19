@@ -290,6 +290,14 @@ class EmailNotice(db.Model):
     is_sent_three_month_grace_period = db.Column(db.Boolean)
     is_sent_expiry_and_membership_remove = db.Column(db.Boolean)
 
+    is_sent_check_assessement_form = db.Column(db.Boolean)
+    is_sent_approve_assessement_form = db.Column(db.Boolean)
+
+class SystemFunction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    function_name = db.Column(db.String(100))
+    is_enabled = db.Column(db.Boolean, default=True)
+
 class CsvData(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)

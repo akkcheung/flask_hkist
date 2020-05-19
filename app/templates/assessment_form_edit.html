@@ -13,6 +13,11 @@
 		console.log('call removeForm')
 
 	}
+function setType(type)
+{
+  document.forms["form"].elements["addRowType"].value = type;
+  console.log(type) ;
+}
 
 	$(document).ready(function() {
 	  	// console.log('document is ready!')
@@ -24,7 +29,7 @@
 
 {{title}}
 
-<form action="" method="post" enctype="multipart/form-data">
+<form id="form" action="" method="post" enctype="multipart/form-data">
 
 	<p></p>
 	<h5>Personal Detail : </h5>
@@ -158,6 +163,8 @@
 
     {% endfor %}
 
+<input type="hidden" name="addRowType" value="">
+
 	<p></p>
 	<h5>Professional Qualification : </h5>
 
@@ -202,7 +209,9 @@
 
     {% endfor %}
 
-    <a id="add_pq" href="?action=add_row_pq" onclick="return confirm('Have you saved your changes?\nPress Cancel button and then Save\nor Press Ok button to proceed')">Add Row</a>
+    <!--<a id="add_pq" href="?action=add_row_pq" onclick="return confirm('Have you saved your changes?\nPress Cancel button and then Save\nor Press Ok button to proceed')">Add Row</a>
+ -->
+    <input type ="submit" name="button_add_row" value="Add Row" onclick=setType("add_row_pq")>
 
     <p></p>
 	<h5>Professional Recognition : </h5>
@@ -251,7 +260,9 @@
 
     {% endfor %}
 	
-	<a id="add_pr" href="?action=add_row_pr" onclick="return confirm('Have you saved your changes?\nPress Cancel button and then Save\nor Press Ok button to proceed')">Add Row</a>
+	<!--<a id="add_pr" href="?action=add_row_pr" onclick="return confirm('Have you saved your changes?\nPress Cancel button and then Save\nor Press Ok button to proceed')">Add Row</a>
+    -->
+    <input type ="submit" name="button_add_row" value="Add Row" onclick=setType("add_row_pr")>
 
     <p></p>
 	<h5>Work Experience : </h5>
@@ -298,7 +309,9 @@
 
  	{% endfor %}
 
- 	<a id="add_pr" href="?action=add_row_wk" onclick="return confirm('Have you saved your changes?\nPress Cancel button and then Save\nor Press Ok button to proceed')">Add Row</a>
+ 	<!--<a id="add_pr" href="?action=add_row_wk" onclick="return confirm('Have you saved your changes?\nPress Cancel button and then Save\nor Press Ok button to proceed')">Add Row</a>
+    -->
+    <input type ="submit" name="button_add_row" value="Add Row" onclick=setType("add_row_wk")>
 
 	<p></p>
 	<h5>My Upload : </h5>
@@ -352,19 +365,20 @@
     <button class="btn btn-primary" type="submit">Submit</button>
 	-->
 
-    {% if current_user.is_checker %}
-        <input type ="submit" name="button_submit" value="Check Ok" {# 'disabled' if not p_form.is_form_submit else '' #} >
+    {% if current_user.is_checker or current_user.is_admin %}
         <input type ="submit" name="button_submit" value="Return to applicant for modification">
+        <input type ="submit" name="button_submit" value="Check Ok" {# 'disabled' if not p_form.is_form_submit else '' #} >
 
-    {% elif current_user.is_admin %}
-        <input type ="submit" name="button_submit" value="Approve">
-        <!--
-        <input type ="submit" name="button_submit" value="Reject">
-    -->
+        {% if current_user.is_admin %}
+            <input type ="submit" name="button_submit" value="Approve">
+            <!-- <input type ="submit" name="button_submit" value="Reject"> -->
+        {% endif %}
 
     {% else %}
-        <input type ="submit" name="button_submit" value="Save"> 
-        <input type ="submit" name="button_submit" value="Submit">
+        <!-- <input type ="submit" name="button_submit" value="Save"> -->
+        <input type ="submit" name="button_submit" value="Save" {{ 'disabled' if is_registration_form_submit else '' }}> 
+        <!-- <input type ="submit" name="button_submit" value="Submit"> -->
+        <input type ="submit" name="button_submit" value="Submit" {{ 'disabled' if is_registration_form_submit else '' }}> 
         
         <p></p>
         (* Press 'Save' button to save the form for editing later)

@@ -3,6 +3,7 @@ import stripe
 import os
 import random, string
 import time
+import logging
 
 from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
@@ -32,6 +33,8 @@ from app.forms import LoginForm, SignUpForm, PageForm, PersonDetailForm, LangCom
 from app.forms import LangCompetenceEntriesForm, ProfessionalQualificationEntriesForm, ProfessionalRecognitionEntriesForm, WorkExperienceEntriesForm, UploadEntriesForm
 
 from app.models import User, Page, PersonDetail, LangCompetence, ProfessionalQualification, ProfessionalRecognition, WorkExperience, PaymentHistory, Fee, CpdActivity, CpdActivityEntry, CpdActivityEntryHeader, UploadData, EmailNotice 
+
+#logging.basicConfig(level=logging.DEBUG)
 
 stripe_keys = {
   'secret_key': app.config['STRIPE_SECRET_KEY'],
@@ -311,7 +314,7 @@ def my_profile():
 @login_required
 def member_profile():
 
-    abort(404)  # disable temporarily
+    #abort(404)  # disable temporarily
 
     personDetail = PersonDetail.query.filter_by(user_id=current_user.id).first() 
 
@@ -454,8 +457,8 @@ def charge():
             db.session.add(paymentHistory)
 
             #personDetail = PersonDetail.query.filter_by(user_id = current_user.id).first()
-            if not personDetail.is_register :
-                personDetail.is_register = True                                
+            #if not personDetail.is_register :
+            #    personDetail.is_register = True                                
             
             if current_user.is_new_member :
                 current_user.is_new_member = False
@@ -773,7 +776,7 @@ def applicant_search():
 def member_list():
 
     page = request.args.get('page', 1, type=int)
-    
+
     #members = PersonDetail.query.filter_by(is_register=True).order_by(PersonDetail.name_of_registrant).all()
     members = PersonDetail.query.filter_by(is_register=True).order_by(PersonDetail.name_of_registrant).paginate(page, app.config['MEMBERS_PER_PAGE'], False)
 
@@ -781,11 +784,17 @@ def member_list():
         if members.has_next else None
     prev_url = url_for('member_list', page=members.prev_num) \
         if members.has_prev else None
-    
+
+    is_ajax_call = False
+    if request.is_xhr :
+        is_ajax_call = True
+
     #return render_template('member_list.html', title='Member List', members=members)
-    return render_template('member_list.html', title='Registered Members List', members=members.items, next_url=next_url, prev_url=prev_url)
+    return render_template('member_list.html', title='Registered Members List', members=members.items, next_url=next_url, prev_url=prev_url, is_ajax_call=is_ajax_call)
 
 
+
+'''
 @app.route('/registrants/status/refresh', methods=['GET', 'POST'])
 @login_required
 def member_refresh_regisiter_status():
@@ -809,7 +818,7 @@ def member_refresh_regisiter_status():
         #app.logger.debug(date_time_obj)
 
         for member in members :
-            
+
             paymentHistory = PaymentHistory.query.filter_by(user_id=member.user_id).filter(PaymentHistory.date > date_time_obj).first()
 
             if not paymentHistory is None :
@@ -824,6 +833,7 @@ def member_refresh_regisiter_status():
         return redirect(url_for('member_list'))
 
     return render_template('member_register_status_refresh.html', title='Refresh Members\' register Status', form=form)
+'''
 
 @app.route('/page/new', methods=['GET', 'POST'])
 @login_required
@@ -869,7 +879,7 @@ def page_edit(page_id):
         page.url = form.url.data
         page.title = form.title.data
         page.content = form.content.data
-        
+
         db.session.commit()
 
         flash('Page is saved!', 'success')
@@ -893,7 +903,7 @@ def page_show(page_id):
         page = Page.query.filter_by(url=page_id).first()
 
     if page is None:
-        abort(404)        
+        abort(404)
 
     #current_app.logger.debug(page.title)
 
@@ -903,11 +913,11 @@ def page_show(page_id):
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload():
- 
+
     form = UploadForm()
 
     page = request.args.get('page', 1, type=int)
-    
+
     uploadRecords = UploadData.query.filter_by(user_id=current_user.id).order_by(UploadData.create_date.desc()).paginate(page, app.config['PAYMENT_HISTORY_RECORD_PER_PAGE'], False)
 
     next_url = url_for('upload', page=uploadRecords.next_num) \
@@ -993,7 +1003,7 @@ def download_file(id):
 
     else : 
         #if uploadData.user_id != current_user.id or not current_user.is_admin :
-        if current_user.is_admin :
+        if current_user.is_admin or current_user.is_checker :
             pass
 
         else : 
@@ -1056,6 +1066,8 @@ def assessment_form_edit(id):
     #print('>debug')
     #print(id)
 
+    is_registration_form_submit = False;
+
     if current_user.is_admin or current_user.is_checker :
         #pass
         personDetail = PersonDetail.query.filter_by(id=id).first()
@@ -1066,11 +1078,12 @@ def assessment_form_edit(id):
         current_user_id = personDetail.user_id
 
     else :
-        abort(404) # disable temporarily
+        #abort(404) # disable temporarily
 
         if current_user.is_registration_form_submit :
+            is_registration_form_submit = True
             flash('Your registration form is submitted already!', 'warning')
-            return redirect(url_for('index'))
+            #return redirect(url_for('index'))
 
     p_form = PersonDetailForm(prefix='p-')
 
@@ -1083,7 +1096,8 @@ def assessment_form_edit(id):
     #upl_b_form = UploadForm(prefix='upb-')
     #upl_c_form = UploadForm(prefix='upc-')
 
-    action = request.args.get('action')
+    #action = request.args.get('action')
+    addRowType = request.args.get('addRowType')
 
     #uploadRecords = UploadData.query.filter_by(user_id=current_user.id).order_by(UploadData.create_date.desc()).all()
     uploadRecords = UploadData.query.filter_by(user_id=current_user_id).order_by(UploadData.create_date.desc()).all()
@@ -1091,10 +1105,10 @@ def assessment_form_edit(id):
     if request.method == 'GET':
         #personDetail = PersonDetail.query.filter_by(user_id=current_user.id).first()
         personDetail = PersonDetail.query.filter_by(user_id=current_user_id).first()
-      
+
         #professionalQualification = ProfessionalQualification.query.filter_by(user_id=current_user.id).first()
         #professionalRecognition = ProfessionalRecognition.query.filter_by(user_id=current_user.id).first()
-        
+
         #workExperience = WorkExperience.query.filter_by(user_id=current_user.id).first()
 
         if personDetail is None:
@@ -1103,14 +1117,14 @@ def assessment_form_edit(id):
 
             p_form = PersonDetailForm(obj=personDetail, prefix='p-')
 
-             
+
             if personDetail.is_charge_local_annual_fee :
                 p_form.local_or_overseas.default = 'local'
             else : 
                 p_form.local_or_overseas.default = 'overseas'
 
             p_form.process(obj=personDetail)
-            
+
 
         #lc_entries = LangCompetence.query.filter_by(user_id=current_user.id).all()   
         lc_entries = LangCompetence.query.filter_by(user_id=current_user_id).all()   
@@ -1119,10 +1133,10 @@ def assessment_form_edit(id):
         if len(lc_entries) == 0:
 
             #"dominant_lang" : '',
-            
+
             lc_data = {
                 "lang_competence_id" : 0,
-                
+
                 "dominant_lang_multiple" : '',
                 "dominant_lang_other" : '',
                 "lang_training_was_conducted_multiple" : '',
@@ -1132,11 +1146,11 @@ def assessment_form_edit(id):
             }
 
             lc_entries_form.lang_competence_entries.append_entry(lc_data)
-        
+
         else :
-            
+
             for lc_entry in lc_entries :
-                            
+
                 lc_data = {
                     "lang_competence_id" : lc_entry.id,
                     "dominant_lang_multiple" : lc_entry.dominant_lang_multiple,
@@ -1151,8 +1165,8 @@ def assessment_form_edit(id):
 
                 lc_entries_form.lang_competence_entries.append_entry(lc_data)
 
-        #pq_entries = ProfessionalQualification.query.filter_by(user_id=current_user.id).all()   
-        pq_entries = ProfessionalQualification.query.filter_by(user_id=current_user_id).all()   
+        #pq_entries = ProfessionalQualification.query.filter_by(user_id=current_user.id).all()
+        pq_entries = ProfessionalQualification.query.filter_by(user_id=current_user_id).all()
 
         #if pq_entries is None:
         if len(pq_entries) == 0:
@@ -1191,7 +1205,14 @@ def assessment_form_edit(id):
                 
                 pq_entries_form.professional_qualification_entries.append_entry(pq_data)
 
-            if action == "add_row_pq" and len(pq_entries_form.professional_qualification_entries) < 3 :
+            
+            #if action == "add_row_pq" and len(pq_entries_form.professional_qualification_entries) < 3 :
+
+            print('debug')
+            print('addRowType')
+            print(addRowType)
+
+            if addRowType == "add_row_pq" and len(pq_entries_form.professional_qualification_entries) < 3 :
 
                 pq_data = {
                     "professional_qualification_id" : 0,
@@ -1208,8 +1229,10 @@ def assessment_form_edit(id):
 
                 pq_entries_form.professional_qualification_entries.append_entry(pq_data)
             
-            elif action == "add_row_pq" :
+            #elif action == "add_row_pq" :
+            elif addRowType == "add_row_pq" :
                 flash('Maximun 3 rows are reached!', 'warning')
+           
 
         #pr_entries = ProfessionalRecognition.query.filter_by(user_id=current_user.id).all()   
         pr_entries = ProfessionalRecognition.query.filter_by(user_id=current_user_id).all()   
@@ -1241,7 +1264,9 @@ def assessment_form_edit(id):
                 
                 pr_entries_form.professional_recognition_entries.append_entry(pr_data)
 
-            if action == "add_row_pr" and len(pr_entries_form.professional_recognition_entries) < 3 :
+            
+            #if action == "add_row_pr" and len(pr_entries_form.professional_recognition_entries) < 3 :
+            if addRowType == "add_row_pr" and len(pr_entries_form.professional_recognition_entries) < 3 :
 
                 pr_data = {
                     "professional_recognition_id" : 0,
@@ -1253,9 +1278,10 @@ def assessment_form_edit(id):
 
                 pr_entries_form.professional_recognition_entries.append_entry(pr_data)
             
-            elif action == "add_row_pr" :
-
+            #elif action == "add_row_pr" :
+            elif addRowType == "add_row_pr" :
                 flash('Maximun 3 rows are reached!', 'warning')
+            
 
         #wk_entries = WorkExperience().query.filter_by(user_id=current_user.id).all()
         wk_entries = WorkExperience().query.filter_by(user_id=current_user_id).all()   
@@ -1275,7 +1301,7 @@ def assessment_form_edit(id):
         else : 
 
             for wk in wk_entries :
-            
+
                 wk_data = {
                     "work_experience_id" : wk.id,
                     "employer_name" : wk.employer_name,
@@ -1283,10 +1309,10 @@ def assessment_form_edit(id):
                     "from_date" : wk.from_date,
                     "to_date" : wk.to_date,
                 }
-                
+
                 wk_entries_form.work_experience_entries.append_entry(wk_data)
 
-            if action == "add_row_wk" and len(wk_entries_form.work_experience_entries) < 3 :
+            if addRowType == "add_row_wk" and len(wk_entries_form.work_experience_entries) < 5 :
 
                 wk_data = {
                     "work_experience_id" : 0,
@@ -1297,16 +1323,20 @@ def assessment_form_edit(id):
                 }
 
                 wk_entries_form.work_experience_entries.append_entry(wk_data)
-            
-            elif action == "add_row_wk" and len(wk_entries_form.work_experience_entries) == 3 :
 
-                flash('Maximun 3 rows are reached!', 'warning')
+            elif addRowType == "add_row_wk" :
+                flash('Maximun 5 rows are reached!', 'warning')
+
+            print('debug')
+            print('work_experience_entries')
+            print(len(wk_entries_form.work_experience_entries))
+           
 
         #uploadRecords = UploadData.query.filter_by(user_id=current_user.id).order_by(UploadData.create_date.desc()).all()
 
 
     elif request.method == 'POST' and p_form.validate() and lc_entries_form.validate() and pq_entries_form.validate() and pr_entries_form.validate() and wk_entries_form.validate() and upl_form.validate() :
-    
+
         is_error = False
 
         personDetail = PersonDetail()
@@ -1316,16 +1346,17 @@ def assessment_form_edit(id):
             personDetail = PersonDetail.query.get(p_form.id.data)
 
             if request.form.get('button_submit')== 'Return to applicant for modification':
+                user = User.query.get(current_user_id)
 
                 #if personDetail.is_form_submit :
-                if personDetail.date_of_submit :
-                    
+                if user.is_registration_form_submit :
+
                     #personDetail.is_form_check = False
                     #personDetail.is_form_submit = False
                     personDetail.date_of_submit = None
-                    personDetail.date_of_check = None
-                    
-                    user = User.query.get(current_user_id)
+                    #personDetail.date_of_check = None
+                    #personDetail.date_of_approve = None
+
                     user.is_registration_form_submit = False
 
                     #print('>debug')
@@ -1334,13 +1365,14 @@ def assessment_form_edit(id):
                     db.session.commit()
 
                     flash('Returned to applicant for modification!', 'success')
-                
+
                 else: 
                     flash('Applicant does not submit the application !', 'warning')
 
                 return redirect(url_for('assessment_form_edit', id=p_form.id.data))
 
             if request.form.get('button_submit')== 'Check Ok':
+                user = User.query.get(current_user_id)
 
                 if personDetail.date_of_submit and not personDetail.date_of_check :
 
@@ -1349,6 +1381,36 @@ def assessment_form_edit(id):
                     db.session.commit()
 
                     flash('Application is checked!', 'success')
+
+                    fee = Fee.query.filter(Fee.date_effective_to > date.today()).filter_by(type='Local').first()        
+
+                    #print('debug')
+                    #print('fee')
+                    #print(fee)
+
+                    if not personDetail.is_charge_local_annual_fee :
+                        fee = Fee.query.filter(Fee.date_effective_to > date.today()).filter_by(type='Overseas').first()        
+
+                    try:
+                        msg = Message("Your HKIST Application is received", sender=app.config['MAIL_USERNAME'], recipients=[user.email])
+                        msg.body = ""
+                        msg.html = render_template('email_notice_check_assessment_form.html', fee=fee, domain_name=app.config['DOMAIN_NAME'])
+                        mail.send(msg)
+
+                        emailNotice = EmailNotice(email=user.email)
+                        emailNotice.is_sent_check_assessement_form = True
+                        emailNotice.create_date = datetime.now()
+                        db.session.add(emailNotice)
+                        db.session.commit()
+
+                        #logging.debug('msg sent!')
+                        #print('debug')
+                        #print('check msg sent!')
+
+                    except Exception as e:
+                        print (type(e))
+                        print (e)
+
                 else :
 
                     if not personDetail.date_of_submit :
@@ -1360,17 +1422,35 @@ def assessment_form_edit(id):
                 return redirect(url_for('assessment_form_edit', id=p_form.id.data))
 
             if request.form.get('button_submit')== 'Approve':
+                user = User.query.get(current_user_id)
 
                 #if personDetail.is_form_check :
                 if personDetail.date_of_check :
                     #personDetail.is_form_approve = True
                     personDetail.date_of_approve = date.today()
+
+                    if not personDetail.is_register :
+                        personDetail.is_register = True
+
                     db.session.commit()
 
-                    #Todo - Send Email
-
-
                     flash('Registration is approved!', 'success')
+
+                    try:
+                        msg = Message("Your HKIST Application is completed", sender=app.config['MAIL_USERNAME'], recipients=[user.email])
+                        msg.body = ""
+                        msg.html = render_template('email_notice_approve_assessment_form.html', domain_name=app.config['DOMAIN_NAME'])
+                        mail.send(msg)
+
+                        emailNotice = EmailNotice(email=user.email)
+                        emailNotice.create_date = datetime.now()
+                        emailNotice.is_sent_approve_assessement_form = True
+                        db.session.add(emailNotice)
+                        db.session.commit()
+
+                    except Exception as e:
+                        print (type(e))
+                        print (e)
 
                 else :
                     flash('Registration is not checked!', 'warning')
@@ -1390,8 +1470,8 @@ def assessment_form_edit(id):
         else : 
             personDetail.is_charge_local_annual_fee = False
 
-        if not p_form.id.data: 
-            personDetail.id = None       
+        if not p_form.id.data:
+            personDetail.id = None
             #personDetail.user_id = current_user.id
             personDetail.user_id = current_user_id
             db.session.add(personDetail)
@@ -1411,28 +1491,28 @@ def assessment_form_edit(id):
 
                 langs = "" 
                 for ele in list_of_langs:  
-                    langs = langs + ele + ";"   
+                    langs = langs + ele + ";"
 
                 langCompetence.dominant_lang_multiple = langs
                 langCompetence.dominant_lang_other = form.dominant_lang_other.data
-                
+
                 #langCompetence.lang_training_was_conducted = form.lang_training_was_conducted.data
                 list_of_langs = form.lang_training_was_conducted_multiple.data
-                
+
                 langs = "" 
                 for ele in list_of_langs:  
-                    langs = langs + ele + ";"   
+                    langs = langs + ele + ";"
 
                 langCompetence.lang_training_was_conducted_multiple = langs
 
                 langCompetence.lang_training_was_conducted_other = form.lang_training_was_conducted_other.data
-                
+
                 #langCompetence.lang_provide_therapy = form.lang_provide_therapy.data
                 list_of_langs = form.lang_provide_therapy_multiple.data
 
                 langs = "" 
                 for ele in list_of_langs:  
-                    langs = langs + ele + ";"   
+                    langs = langs + ele + ";"
 
                 langCompetence.lang_provide_therapy_multiple = langs
 
@@ -1443,7 +1523,7 @@ def assessment_form_edit(id):
 
                 db.session.add(langCompetence)
                 #db.session.commit()
-                
+
             else :
 
                 #langCompetence = LangCompetence.query.filter_by(id=form.lang_competence_id.data).filter_by(user_id=current_user.id).first()
@@ -1460,11 +1540,11 @@ def assessment_form_edit(id):
                     langs = langs + ele + ";"   
 
                 langCompetence.dominant_lang_multiple = langs
-                
+
                 langCompetence.dominant_lang_other = form.dominant_lang_other.data
 
                 #langCompetence.lang_training_was_conducted = form.lang_training_was_conducted.data
-                
+
                 list_of_langs = form.lang_training_was_conducted_multiple.data
 
                 langs = "" 
@@ -1492,6 +1572,7 @@ def assessment_form_edit(id):
                 
                 #db.session.commit()
 
+        #pq_rows = 0;
         for form in pq_entries_form.professional_qualification_entries :
 
             if int(form.professional_qualification_id.data) == 0 :
@@ -1533,6 +1614,41 @@ def assessment_form_edit(id):
 
                 #db.session.commit()
 
+            #pq_rows += 1
+
+        '''
+        if request.form.get('addRowType')== 'add_row_pq' and pq_rows < 3 :
+
+            #print('> debug')
+            #print('addRowType')
+            #addRowType = request.form.get('addRowType')
+            #print(addRowType)
+
+            pq_data = {
+                "professional_qualification_id" : 0,
+                #"qualification_name" : '',
+                #"issue_authority" : '',
+                "issue_year" : '',
+                "qualification_name_in_eng" : '',
+                "issue_authority_in_eng" : '',
+                "country_name" : ''
+                #"language_of_instruction" : '',
+                #"graduation_date" : '',
+                #"level" : ''
+            }
+
+            pq_entries_form.professional_qualification_entries.append_entry(pq_data)
+
+            elif request.form.get('addRowType')== 'add_row_pq' and pq_rows == 3 :
+                    flash('Maximun 3 rows are reached!', 'warning')
+            '''
+
+        #print('debug')
+        #print('post')
+        #print('pr_rows')
+        #print(len(professional_)
+
+        #pr_rows = 0;
         for form in pr_entries_form.professional_recognition_entries :
 
             if int(form.professional_recognition_id.data) == 0 :
@@ -1548,7 +1664,7 @@ def assessment_form_edit(id):
 
                 #professionalRecognition.user_id = current_user.id
                 professionalRecognition.user_id = current_user_id
-                
+                    
                 db.session.add(professionalRecognition)
                 #db.session.commit()
 
@@ -1563,10 +1679,42 @@ def assessment_form_edit(id):
                 professionalRecognition.expiry_date = form.expiry_date.data
 
                 #db.session.commit()
+                #pr_rows += 1
 
+
+            '''
+            if request.form.get('addRowType')== 'add_row_pr' and pr_rows < 3 :
+                pr_data = {
+                    "professional_recognition_id" : 0,
+                    "country_name" : '',
+                    "organization_name" : '',
+                    "membership_type" : '',
+                    "expiry_date" : '',
+                }
+
+                pr_entries_form.professional_recognition_entries.append_entry(pr_data)
+
+            if request.form.get('addRowType')== 'add_row_pr' and pr_rows == 3 :
+                flash('Maximun 3 rows are reached!', 'warning')
+            '''
+
+        print('debug-wk')
+        print('post')
+        print('work_experience_entries')
+        print(len(wk_entries_form.work_experience_entries))
+
+        
+        wk_rows = 0
         for form in wk_entries_form.work_experience_entries :
 
+            print('debug-wk-entry')
+            print('work_experince_id')
+            print(form.work_experience_id.data)
+            #print('wk_rows')
+            #print(wk_rows)
+
             if int(form.work_experience_id.data) == 0 :
+                print('debug-wk-entry-0')
 
                 workExperience = WorkExperience()
 
@@ -1580,9 +1728,10 @@ def assessment_form_edit(id):
                 workExperience.user_id = current_user_id
 
                 db.session.add(workExperience)
-                #db.session.commit()
-
+                    #db.session.commit()
+            
             else : 
+                print('debug-wk-entry-else')
 
                 #workExperience = WorkExperience.query.filter_by(id=form.work_experience_id.data).filter_by(user_id=current_user.id).first()
                 workExperience = WorkExperience.query.filter_by(id=form.work_experience_id.data).filter_by(user_id=current_user_id).first()
@@ -1591,7 +1740,30 @@ def assessment_form_edit(id):
                 workExperience.job_title = form.job_title.data
                 workExperience.from_date = form.from_date.data
                 workExperience.to_date = form.to_date.data
- 
+
+            wk_rows += 1
+
+            #print('debug')
+            print('wk_rows')
+            print(wk_rows)
+
+
+            '''
+            if request.form.get('addRowType')== 'add_row_wk' and wk_rows < 5 :
+                wk_data = {
+                    "work_experience_id" : 0,
+                    "employer_name" : '',
+                    "job_title" : '',
+                    "from_date" : '',
+                    "to_date" : '',
+                }
+
+                wk_entries_form.work_experience_entries.append_entry(wk_data)
+
+            if request.form.get('addRowType')== 'add_row_wk' and wk_rows == 5 :
+                flash('Maximun 3 rows are reached!', 'warning')
+            '''
+     
         if upl_form.validate_on_submit():
 
             f = upl_form.photo.data
@@ -1624,7 +1796,7 @@ def assessment_form_edit(id):
 
 
         if not is_error :
-            
+                
             if request.form.get('button_submit') == 'Submit':
 
                 user = User.query.filter_by(id=current_user.id).first()
@@ -1636,12 +1808,21 @@ def assessment_form_edit(id):
 
             db.session.commit()
 
+            if request.form.get('addRowType')== 'add_row_pq' :
+                return redirect(url_for('assessment_form_edit', addRowType='add_row_pq'))
+
+            if request.form.get('addRowType')== 'add_row_pr' :
+                return redirect(url_for('assessment_form_edit', addRowType='add_row_pr'))
+
+            if request.form.get('addRowType')== 'add_row_wk' :
+                return redirect(url_for('assessment_form_edit', addRowType='add_row_wk'))
+
             if request.form.get('button_submit')== 'Save':
                 flash('Form is saved!', 'success')
                 return redirect(url_for('assessment_form_edit'))
 
             if request.form.get('button_submit') == 'Submit':
-                flash('Form is submitted!', 'success')
+                #flash('Form is submitted!', 'success')
                 #return redirect(url_for('index'))
                 return redirect(url_for('assessment_form_submit_complete'))
             
@@ -1652,6 +1833,7 @@ def assessment_form_edit(id):
         print(lc_entries_form.errors)
         print(pq_entries_form.errors)
         print(pr_entries_form.errors)
+        print(wk_entries_form.errors)
 
     return render_template( 'assessment_form_edit.html'
         , title=''
@@ -1663,7 +1845,8 @@ def assessment_form_edit(id):
         , upl_form = upl_form
         #, upl_b_form = upl_b_form
         #, upl_c_form = upl_c_form
-        , uploadRecords=uploadRecords,
+        , uploadRecords=uploadRecords
+        , is_registration_form_submit = is_registration_form_submit
         )
 
 
@@ -1710,6 +1893,7 @@ class PaymentHistoryView(AdminModelView):
 class PersonDetailView(AdminModelView):
 
     column_searchable_list = ['name_of_registrant', 'mobile_phone', 'user.email']
+    can_export = True
 
 class LangCompetenceView(AdminModelView):
 
