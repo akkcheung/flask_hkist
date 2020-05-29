@@ -32,7 +32,7 @@ function setType(type)
 <form id="form" action="" method="post" enctype="multipart/form-data">
 
 	<p></p>
-	<h5>Personal Detail : </h5>
+	<h5>Personal Details : </h5>
 
     {{ p_form.hidden_tag() }}
     
@@ -375,8 +375,8 @@ function setType(type)
         {% endif %}
 
     {% else %}
-        <!-- <input type ="submit" name="button_submit" value="Save"> -->
-        <input type ="submit" name="button_submit" value="Save" {{ 'disabled' if is_registration_form_submit else '' }}> 
+        <input type ="submit" name="button_submit" value="Save"> 
+        <!-- <input type ="submit" name="button_submit" value="Save" {{ 'disabled' if is_registration_form_submit else '' }}> -->
         <!-- <input type ="submit" name="button_submit" value="Submit"> -->
         <input type ="submit" name="button_submit" value="Submit" {{ 'disabled' if is_registration_form_submit else '' }}> 
         

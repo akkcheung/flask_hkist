@@ -236,6 +236,7 @@ class CpdActivityEntryHeader(db.Model):
 
     is_closed = db.Column(db.Boolean, default=False)
 
+    is_sent_three_month_before_expiry = db.Column(db.Boolean, default=False)
     is_sent_one_month_before_expiry = db.Column(db.Boolean, default=False)
     is_sent_three_month_grace_period = db.Column(db.Boolean, default=False)
     is_sent_expiry_and_membership_remove = db.Column(db.Boolean, default=False)
@@ -286,6 +287,7 @@ class EmailNotice(db.Model):
 
     is_sent_password_reset = db.Column(db.Boolean, default=False)
 
+    is_sent_three_month_before_expiry = db.Column(db.Boolean)
     is_sent_one_month_before_expiry = db.Column(db.Boolean)
     is_sent_three_month_grace_period = db.Column(db.Boolean)
     is_sent_expiry_and_membership_remove = db.Column(db.Boolean)

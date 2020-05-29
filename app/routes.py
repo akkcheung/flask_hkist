@@ -50,95 +50,6 @@ def randomString(stringLength):
     return ''.join(random.choice(letters) for i in range(stringLength))
 
 
-    '''
-    @app.route('/run-tasks')
-    def run_tasks():
-        for i in range(10):
-            app.apscheduler.add_job(func=scheduled_task, trigger='date', args=[i], id='j'+str(i))
- 
-    return 'Scheduled several long running tasks.', 200
-
-    def scheduled_task(task_id):
-        for i in range(10):
-            time.sleep(1)
-            print('Task {} running iteration {}'.format(task_id, i))
-    '''
-
-'''
-@app.route('/run-tasks')
-def run_tasks():
-    i=1
-    app.apscheduler.add_job(func=scheduled_task, trigger='date', args=[i], id='job'+str(i))
-
-def scheduled_task(task_id):
-    #cpdActivityEntryHeader_list = CpdActivityEntryHeader.query.filter_by('is_closed'=None).order_by(id)
-    #todo
-    cpdActivityEntryHeader_list = CpdActivityEntryHeader.query.order_by('id').all()
-
-    #print('debug')
-    #print(cpdActivityEntryHeader_list.count())
-
-    if cpdActivityEntryHeader_list : 
-        for cpd_activity_entry_header in cpdActivityEntryHeader_list :
-
-            email_subject=''
-            email_template=''
-
-            emailNotice = EmailNotice()
-            emailNotice.create_date = datetime.now()
-
-            try:
-                if not cpd_activity_entry_header.is_sent_one_month_before_expiry :
-                    print('if-1')
-                    if not cpd_activity_entry_header.is_sent_three_month_grace_period :  
-                        if date.today() + relativedelta(months=1) > cpd_activity_entry_header.end_date.date() :
-                            email_subject = "Notice : You have 1 month left to fill your CPD Acitivity form"
-                            email_template = 'email_notice_one_month_before_expiry.html' 
-
-                            emailNotice.is_sent_one_month_before_expiry = True
-
-                if not cpd_activity_entry_header.is_sent_three_month_grace_period :  
-                    print('if-2')
-                    if cpd_activity_entry_header.is_sent_one_month_before_expiry :
-                        if cpd_activity_entry_header.end_date.date() > date.today() :
-                            email_subject = "Notice : You are provided 3 months grace period to fill your CPD Acitivity form"
-                            email_template = 'email_notice_three_months_grace_period.html' 
-
-                            emailNotice.is_sent_three_month_grace_period = True
-
-                if not cpd_activity_entry_header.is_sent_expiry_and_membership_remove :
-                    print('if-3')
-                    if cpd_activity_entry_header.is_sent_one_month_before_expiry :
-                        if cpd_activity_entry_header.is_sent_three_month_grace_period :  
-                            #if cpd_activity_entry_header.end_date + relativedelta(months=3) >= datetime.today() :
-                            if cpd_activity_entry_header.end_date.date() + relativedelta(months=3) >= date.today() :
-                                email_subject = "Notice : Your have reach 3 month graceful period to fill yourCPD Acitivity form and your membership is expired automatically"
-                                email_template = 'email_notice_membership_expiry.html' 
-
-                                emailNotice.is_sent_one_month_before_expiry= True
-
-                if emailNotice.is_sent_one_month_before_expiry or emailNotice.is_sent_three_month_grace_period or emailNotice.is_sent_expiry_and_membership_remove :
-                    user = User.query.get(cpd_activity_entry_header.user_id)
-
-                    msg = Message(email_subject, sender=app.config['EMAIL_USERNAME'], recipients=[user.email])
-                    msg.body = ""
-                    msg.html = render_template(email_template)
-
-                    #mail.send(msg)
-                    print(">debug:")
-                    print("sent email to [" + user.email + "] with subject [" + email_subject + "]")  
-
-                    #emailNotice = EmailNotice(email=user.email)
-                    emailNotice.email=user.email
-                    db.session.add(emailNotice)
-
-                    db.session.commit()
-
-            except Exception as e:
-                print(str(e))
-'''
-
-
 @app.route('/')
 @app.route('/index')
 def index():
@@ -697,7 +608,16 @@ def applicant_list():
     #page = request.args.get('page', 1, type=int)
     page, per_page, offset = get_page_args(page_parameter='page', per_page_parameter='per_page')
 
-    is_approve = request.args.get('is_approve')    
+    #is_check = request.args.get('is_check')    
+    #is_approve = request.args.get('is_approve')    
+    begin_letter = request.args.get('begin_letter')
+    application_status = request.args.get('application_status')
+
+    '''
+    print('debug')
+    print('begin_letter')
+    print(begin_letter)
+    '''
 
     #print("> debug")
     #print(PersonDetail.query.filter_by(is_form_check=False).count())
@@ -705,18 +625,26 @@ def applicant_list():
     #applicants = PersonDetail.query.filter_by(is_form_check=False).order_by(PersonDetail.name_of_registrant).paginate(page, app.config['MEMBERS_PER_PAGE'], False)
     applicantObjectList = []
 
-    if not is_approve :
+    #if not is_approve :
+    if not application_status :
         #applicants = PersonDetail.query.order_by(PersonDetail.name_of_registrant).paginate(page, app.config['MEMBERS_PER_PAGE'], False)
-        applicants = PersonDetail.query.order_by(PersonDetail.name_of_registrant)
+        #applicants = PersonDetail.query.order_by(PersonDetail.name_of_registrant)
+        #applicants = PersonDetail.query.filter(PersonDetail.name_of_registrant.ilike(begin_letter + '%')).order_by(PersonDetail.name_of_registrant)
+        applicants = PersonDetail.query.filter(PersonDetail.name_of_registrant.ilike('a%')).order_by(PersonDetail.name_of_registrant)
     else :
 
-        if is_approve == 'Y' :
+        #if is_approve == 'Y' :
+        if application_status == 'check' :
             #applicants = PersonDetail.query.filter(PersonDetail.date_of_approve != None).order_by(PersonDetail.name_of_registrant).paginate(page, app.config['MEMBERS_PER_PAGE'], False)
-            applicants = PersonDetail.query.filter(PersonDetail.date_of_approve != None).order_by(PersonDetail.name_of_registrant)
+            #applicants = PersonDetail.query.filter(PersonDetail.date_of_approve != None).order_by(PersonDetail.name_of_registrant)
+            #applicants = PersonDetail.query.filter(PersonDetail.date_of_approve != None).filter(PersonDetail.name_of_registrant.ilike(begin_letter + '%')).order_by(PersonDetail.name_of_registrant)
+            applicants = PersonDetail.query.filter(PersonDetail.date_of_submit != None).filter(PersonDetail.date_of_check == None).filter(PersonDetail.name_of_registrant.ilike(begin_letter + '%')).order_by(PersonDetail.name_of_registrant)
 
-        if is_approve == 'N' :
+        #if is_approve == 'N' :
+        if application_status == 'approve' :
             #applicants = PersonDetail.query.filter(PersonDetail.date_of_approve == None).order_by(PersonDetail.name_of_registrant).paginate(page, app.config['MEMBERS_PER_PAGE'], False)
-            applicants = PersonDetail.query.filter(PersonDetail.date_of_approve == None).order_by(PersonDetail.name_of_registrant)
+            #applicants = PersonDetail.query.filter(PersonDetail.date_of_approve == None).order_by(PersonDetail.name_of_registrant)
+            applicants = PersonDetail.query.filter(PersonDetail.date_of_submit != None).filter(PersonDetail.date_of_check != None).filter(PersonDetail.date_of_approve == None).filter(PersonDetail.name_of_registrant.ilike(begin_letter + '%')).order_by(PersonDetail.name_of_registrant)
 
     for applicant in applicants:
 
@@ -752,10 +680,13 @@ def applicant_list():
     #return render_template('applicant_list.html', title='Applicants List', applicants=applicants.items, next_url=next_url, prev_url=prev_url)
     #return render_template('applicant_list.html', title='Applicants List', applicants=applicants.items, next_url=next_url, prev_url=prev_url, is_approve=is_approve)
 
+    per_page = 50
+
     pagination_applicants = applicantObjectList[offset: offset + per_page]
     pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap4')
 
-    return render_template('applicant_list.html', title='Applicants List', applicants=pagination_applicants, page=page, per_page=per_page, pagination=pagination, is_approve=is_approve)
+    #return render_template('applicant_list.html', title='Applicants List', applicants=pagination_applicants, page=page, per_page=per_page, pagination=pagination, is_approve=is_approve, begin_letter=begin_letter)
+    return render_template('applicant_list.html', title='Applicants List', applicants=pagination_applicants, page=page, per_page=per_page, pagination=pagination, application_status=application_status, begin_letter=begin_letter)
 
 
 @app.route('/applicants/search', methods=['POST'])
@@ -763,11 +694,38 @@ def applicant_list():
 def applicant_search():
     #if form.validate_on_submit():
     #    search = form.search.data
+    if request.form.get('begin_letter') :
+        begin_letter = request.form.get('begin_letter') 
+
+    else :
+        begin_letter = ''
+
+    '''    
+    if request.form.get('is_not_check') :
+        is_check = 'N'
+    else :
+        is_check = 'Y'
 
     if request.form.get('is_not_approve') :
-        return redirect(url_for('applicant_list', is_approve="N"))
+        is_approve = 'N'
+    else :
+        is_approve = 'Y'
+    '''
+    if request.form.get('application_status') :
+        application_status = request.form.get('application_status')
+        return redirect(url_for('applicant_list', application_status=application_status, begin_letter=begin_letter))
 
-    return redirect(url_for('applicant_list', is_approve="Y"))            
+    else :
+        return redirect(url_for('applicant_list', begin_letter=begin_letter))
+
+    '''
+    if request.form.get('is_not_approve') :
+        #return redirect(url_for('applicant_list', is_approve="N"))
+        return redirect(url_for('applicant_list', is_approve="N", begin_letter=begin_letter))
+    '''
+
+    #return redirect(url_for('applicant_list', is_approve="Y", begin_letter=begin_letter))
+    #return redirect(url_for('applicant_list', is_check=is_check, is_approve=is_approve, begin_letter=begin_letter))
 
 
 @app.route('/registrants/list', methods=['GET'])
@@ -1082,7 +1040,7 @@ def assessment_form_edit(id):
 
         if current_user.is_registration_form_submit :
             is_registration_form_submit = True
-            flash('Your registration form is submitted already!', 'warning')
+            #flash('Your registration form is submitted already!', 'warning')
             #return redirect(url_for('index'))
 
     p_form = PersonDetailForm(prefix='p-')
@@ -1429,12 +1387,12 @@ def assessment_form_edit(id):
                     #personDetail.is_form_approve = True
                     personDetail.date_of_approve = date.today()
 
-                    if not personDetail.is_register :
-                        personDetail.is_register = True
+                    #if not personDetail.is_register :
+                    #    personDetail.is_register = True
 
                     db.session.commit()
 
-                    flash('Registration is approved!', 'success')
+                    flash('Application is approved!', 'success')
 
                     try:
                         msg = Message("Your HKIST Application is completed", sender=app.config['MAIL_USERNAME'], recipients=[user.email])
@@ -1453,7 +1411,7 @@ def assessment_form_edit(id):
                         print (e)
 
                 else :
-                    flash('Registration is not checked!', 'warning')
+                    flash('Application is not checked!', 'warning')
 
                 return redirect(url_for('assessment_form_edit', id=p_form.id.data))
 
@@ -1890,8 +1848,10 @@ class PaymentHistoryView(AdminModelView):
 
     column_searchable_list = ['user.email']   
 
-class PersonDetailView(AdminModelView):
+#class PersonDetailView(AdminModelView):
+class PersonDetailView(AdminModelEditView):
 
+    column_list = ['old_id', 'name_of_registrant', 'chinese_name', 'user.email', 'mobile_phone', 'correspondence_addr','date_of_submit','date_of_check', 'date_of_approve', 'is_register' ]
     column_searchable_list = ['name_of_registrant', 'mobile_phone', 'user.email']
     can_export = True
 
@@ -1933,11 +1893,13 @@ class UploadDataView(AdminModelView):
 
 #admin.add_view(AdminModelView(User, db.session, category="Members Area"))
 
+#admin.add_view(AdminModelEditView(User, db.session, category="Members Area"))
+
 admin.add_view(PaymentHistoryView(PaymentHistory, db.session, category="Members Area"))
 
 admin.add_view(CpdActivityEntryView(CpdActivityEntry, db.session, category="Members Area"))
 
-admin.add_view(PersonDetailView(PersonDetail, db.session, category="Members Area"))
+admin.add_view(PersonDetailView(PersonDetail, db.session, 'Person Details', category="Members Area"))
 
 admin.add_view(LangCompetenceView(LangCompetence, db.session, category="Members Area"))
 

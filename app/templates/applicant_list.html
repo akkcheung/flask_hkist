@@ -5,16 +5,45 @@
 
 <p></p>
 <form method="post" action="/applicants/search">
-	<!--
-    <input type="text" name="Name search"/>
-    <input type="checkbox" name="is_not_check"   {{ 'checked' if is_approve == 'N' }}>&nbsp Application is waiting for check</input>
-    -->
-    <input type="checkbox" name="is_not_approve" {{ 'checked' if is_approve == 'N' }}>&nbsp Application is Waiting for approval</input>
-	<!--
+	<!-- <input type="text" name="Name search"/> -->
+    <!-- <input type="checkbox" name="is_not_check"   {{ 'checked' if is_check == 'N' }}>&nbsp Pending for check</input> -->
+    <!-- <input type="checkbox" name="is_not_approve" {{ 'checked' if is_approve == 'N' }}>&nbsp Pending for approval</input> -->
+    <input type="radio" name="application_status" value="check" {{ 'checked' if application_status == 'check' }}> <label for="check">Pending for Check</label>
+    <input type="radio" name="application_status" value="approve" {{ 'checked' if application_status == 'approve'}}> <label for="approve">Pending for Approve</label>
+    <!-- <p></p> is_approve: {{ is_approve }} -->
+    <!-- <p></p> begin_letter: {{ begin_letter }} -->
+
     <p></p>
-    is_approve: {{ is_approve }}
-	-->
-    
+    <select name="begin_letter">
+        <option value="" {{ 'selected' if begin_letter == '' else '' }}></option>
+        <option value="A" {{ 'selected' if begin_letter == 'A' else '' }}>A</option>
+        <option value="B" {{ 'selected' if begin_letter == 'B' else '' }}>B</option>
+        <option value="C" {{ 'selected' if begin_letter == 'C' else '' }}>C</option>
+        <option value="D" {{ 'selected' if begin_letter == 'D' else '' }}>D</option>
+        <option value="E" {{ 'selected' if begin_letter == 'E' else '' }}>E</option>
+        <option value="F" {{ 'selected' if begin_letter == 'F' else '' }}>F</option>
+        <option value="G" {{ 'selected' if begin_letter == 'G' else '' }}>G</option>
+        <option value="H" {{ 'selected' if begin_letter == 'H' else '' }}>H</option>
+        <option value="I" {{ 'selected' if begin_letter == 'I' else '' }}>I</option>
+        <option value="J" {{ 'selected' if begin_letter == 'J' else '' }}>J</option>
+        <option value="K" {{ 'selected' if begin_letter == 'K' else '' }}>K</option>
+        <option value="L" {{ 'selected' if begin_letter == 'L' else '' }}>L</option>
+        <option value="M" {{ 'selected' if begin_letter == 'M' else '' }}>M</option>
+        <option value="N" {{ 'selected' if begin_letter == 'N' else '' }}>N</option>
+        <option value="O" {{ 'selected' if begin_letter == 'O' else '' }}>O</option>
+        <option value="P" {{ 'selected' if begin_letter == 'P' else '' }}>P</option>
+        <option value="Q" {{ 'selected' if begin_letter == 'Q' else '' }}>Q</option>
+        <option value="R" {{ 'selected' if begin_letter == 'R' else '' }}>R</option>
+        <option value="S" {{ 'selected' if begin_letter == 'S' else '' }}>S</option>
+        <option value="T" {{ 'selected' if begin_letter == 'T' else '' }}>T</option>
+        <option value="U" {{ 'selected' if begin_letter == 'U' else '' }}>U</option>
+        <option value="V" {{ 'selected' if begin_letter == 'V' else '' }}>V</option>
+        <option value="W" {{ 'selected' if begin_letter == 'W' else '' }}>W</option>
+        <option value="X" {{ 'selected' if begin_letter == 'X' else '' }}>X</option>
+        <option value="Y" {{ 'selected' if begin_letter == 'Y' else '' }}>Y</option>
+        <option value="Z" {{ 'selected' if begin_letter == 'Z' else '' }}>Z</option>
+    </select>
+
     <p></p>
     <input type="submit">
 </form>
@@ -31,9 +60,9 @@
     <tbody>
         {% for applicant in applicants %}
         <tr valign="top">
-            <td><a href="/assessment_form/{{ applicant.id }}/edit" target="_blank">{{ applicant.name_of_registrant }}</a></td>
+            <td><a href="/assessment_form/{{ applicant.id }}/edit" >{{ applicant.name_of_registrant }}</a></td>
             <td> {{ applicant.chinese_name }} </td>
-            <td><a href="/cpd_activities/{{ applicant.cpd_activity_entry_header_id }}" target="_blank">{{ applicant.valid_period }}</a></td>
+            <td><a href="/cpd_activities/{{ applicant.cpd_activity_entry_header_id }}" >{{ applicant.valid_period }}</a></td>
         </tr>
         {% endfor %}
     </tbody>
