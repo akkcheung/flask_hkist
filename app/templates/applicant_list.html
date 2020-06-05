@@ -53,7 +53,8 @@
     <thead>
         <tr>
             <th scope="col">Name</th>
-            <th scope="col">Chinese Name</th>
+            <!-- <th scope="col">Chinese Name</th> -->
+            <th scope="col">Email</th>
             <th scope="col">CPD Activity Form</th>
         </tr>
     </thead>
@@ -61,7 +62,8 @@
         {% for applicant in applicants %}
         <tr valign="top">
             <td><a href="/assessment_form/{{ applicant.id }}/edit" >{{ applicant.name_of_registrant }}</a></td>
-            <td> {{ applicant.chinese_name }} </td>
+            <!-- <td> {{ applicant.chinese_name }} </td> -->
+            <td> {{ applicant.email }} </td>
             <td><a href="/cpd_activities/{{ applicant.cpd_activity_entry_header_id }}" >{{ applicant.valid_period }}</a></td>
         </tr>
         {% endfor %}

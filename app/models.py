@@ -11,6 +11,7 @@ import datetime
 
 Base = declarative_base()
 
+
 class User(UserMixin, db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
@@ -29,7 +30,7 @@ class User(UserMixin, db.Model):
     professionalRecognitionEntries = db.relationship('ProfessionalRecognition', backref="user")
     WorkExperienceEntries = db.relationship('WorkExperience', backref="user")
 
-    #cpdActivityEntries = db.relationship('CpdActivityEntry', backref="user")
+    # cpdActivityEntries = db.relationship('CpdActivityEntry', backref="user")
     cpdActivityEntryHeaders = db.relationship('CpdActivityEntryHeader', backref="user")
 
     paymentHistory = db.relationship('PaymentHistory', backref="user")
@@ -55,6 +56,7 @@ class User(UserMixin, db.Model):
 def load_user(id):
     return User.query.get(int(id))
 
+
 class PersonDetail(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
@@ -62,15 +64,15 @@ class PersonDetail(db.Model):
     title = db.Column(db.String(4), nullable=True, default='')
     date_of_birth = db.Column(db.DateTime, nullable=True)
     country_of_birth = db.Column(db.String(10), nullable=True, default='HK')
-    
+
     id = db.Column(db.Integer, primary_key=True)
     name_of_registrant = db.Column(db.String(100))
-    chinese_name = db.Column(db.String(50))    
+    chinese_name = db.Column(db.String(50))
     online_id = db.Column(db.String(50))
     online_registration_date = db.Column(db.DateTime)
     #email = db.Column(db.String(100), index=True, unique=True)
     mobile_phone = db.Column(db.String(50))
-    office_phone = db.Column(db.String(50))    
+    office_phone = db.Column(db.String(50))
     correspondence_addr = db.Column(db.String(200))
     work_addr = db.Column(db.String(200))
 
@@ -82,9 +84,9 @@ class PersonDetail(db.Model):
     #is_form_check = db.Column(db.Boolean, default=False)
     #is_form_approve = db.Column(db.Boolean, default=False)
 
-    date_of_submit =  db.Column(db.DateTime)
-    date_of_check =  db.Column(db.DateTime)
-    date_of_approve =  db.Column(db.DateTime)
+    date_of_submit = db.Column(db.DateTime)
+    date_of_check = db.Column(db.DateTime)
+    date_of_approve = db.Column(db.DateTime)
 
     is_charge_local_annual_fee = db.Column(db.Boolean, default=False)  # Annual amount depends
 
@@ -93,6 +95,7 @@ class PersonDetail(db.Model):
 
     def __repr__(self):
         return '<Name {}>'.format(self.name_of_registrant)
+
 
 class LangCompetence(db.Model):
 
@@ -114,7 +117,7 @@ class LangCompetence(db.Model):
 
     @property
     def dominant_lang_multiple(self):
-        return [ x for x in self._dominant_lang_multiple.split(';')]
+        return [x for x in self._dominant_lang_multiple.split(';')]
 
     @dominant_lang_multiple.setter
     def dominant_lang_multiple(self, value):
@@ -122,7 +125,7 @@ class LangCompetence(db.Model):
 
     @property
     def lang_training_was_conducted_multiple(self):
-        return [ x for x in self._lang_training_was_conducted_multiple.split(';')]
+        return [x for x in self._lang_training_was_conducted_multiple.split(';')]
 
     @lang_training_was_conducted_multiple.setter
     def lang_training_was_conducted_multiple(self, value):
@@ -130,7 +133,7 @@ class LangCompetence(db.Model):
 
     @property
     def lang_provide_therapy_multiple(self):
-        return [ x for x in self._lang_provide_therapy_multiple.split(';')]
+        return [x for x in self._lang_provide_therapy_multiple.split(';')]
 
     @lang_provide_therapy_multiple.setter
     def lang_provide_therapy_multiple(self, value):
@@ -153,13 +156,15 @@ class ProfessionalQualification(db.Model):
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
+
 class ProfessionalRecognition(db.Model):
 
-    id = db.Column(db.Integer, primary_key=True)   
+    id = db.Column(db.Integer, primary_key=True)
     country_name = db.Column(db.String(100))
     organization_name = db.Column(db.String(100))
     membership_type = db.Column(db.String(100))
     expiry_date = db.Column(db.DateTime)
+    exp_to = db.Column(db.String(10))
 
     '''
     upload_file_name = db.Column(db.String(100), default=None, nullable=True)
@@ -168,9 +173,10 @@ class ProfessionalRecognition(db.Model):
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
+
 class WorkExperience(db.Model):
-    
-    id = db.Column(db.Integer, primary_key=True)   
+
+    id = db.Column(db.Integer, primary_key=True)
     employer_name = db.Column(db.String(200))
     job_title = db.Column(db.String(100))
     from_date = db.Column(db.DateTime)
@@ -180,6 +186,7 @@ class WorkExperience(db.Model):
     exp_to = db.Column(db.String(10))
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
 
 class Page(db.Model):
 
@@ -191,20 +198,22 @@ class Page(db.Model):
     content = db.Column(db.Text)
     is_publish = db.Column(db.Boolean, default=False)
 
+
 class Fee(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     date_effective_to = db.Column(db.DateTime)
     description = db.Column(db.String(200), nullable=False)
     currency =  db.Column(db.String(3), nullable=True, default='HKD')
-    amount = db.Column(db.Numeric(10,2), nullable=False)
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
     type = db.Column(db.String(10), nullable=False) # Local / Overseas
 
+
 class PaymentHistory(db.Model):
-    
+
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=False)
-    amount = db.Column(db.Numeric(10,2), nullable=False)
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
     currency =  db.Column(db.String(3), nullable=True, default='HKD')
     description = db.Column(db.String(200), nullable=True)
 
@@ -226,8 +235,8 @@ class CpdActivity(db.Model):
 class CpdActivityEntryHeader(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
-    start_date =  db.Column(db.DateTime)
-    end_date =  db.Column(db.DateTime)
+    start_date = db.Column(db.DateTime)
+    end_date = db.Column(db.DateTime)
     #approved_date = db.Column(db.DateTime)
     date_of_submit =  db.Column(db.DateTime)
 
@@ -243,15 +252,16 @@ class CpdActivityEntryHeader(db.Model):
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
+
 class CpdActivityEntry(db.Model):
-#class CpdActivityEntry(Base):
+    # class CpdActivityEntry(Base):
 
     #__tablename__ = 'cpd_activity_entry'
 
     id = db.Column(db.Integer, primary_key=True)
     create_date = db.Column(db.DateTime)
     activity_description = db.Column(db.Text)
-    point_awarded = db.Column(db.Numeric(3,1), nullable=False)
+    point_awarded = db.Column(db.Numeric(3, 1), nullable=False)
     #year = db.Column(db.Integer)
 
     #cpd_activity_id = db.Column(db.Integer, db.ForeignKey('cpd_activity.id'))
@@ -263,10 +273,11 @@ class CpdActivityEntry(db.Model):
         backref = db.backref('cpd_activity_entry')
     )
     '''
-    
+
     #cpd_activity = orm.relationship(CpdActivity, backref='cpdActivitiyEntries')
 
     cpd_activity_entry_header_id = db.Column(db.Integer, db.ForeignKey('cpd_activity_entry_header.id'))
+
 
 class UploadData(db.Model):
 
@@ -277,6 +288,7 @@ class UploadData(db.Model):
     uuid_filename = db.Column(db.Text)
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
 
 class EmailNotice(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -295,10 +307,12 @@ class EmailNotice(db.Model):
     is_sent_check_assessement_form = db.Column(db.Boolean)
     is_sent_approve_assessement_form = db.Column(db.Boolean)
 
+
 class SystemFunction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     function_name = db.Column(db.String(100))
     is_enabled = db.Column(db.Boolean, default=True)
+
 
 class CsvData(db.Model):
 
@@ -308,10 +322,10 @@ class CsvData(db.Model):
     online_id = db.Column(db.String(50))
     online_registration_date = db.Column(db.DateTime)
     email = db.Column(db.String(100), index=True, unique=True)
-    
+
     mobile_phone = db.Column(db.String(50))
     office_phone = db.Column(db.String(50))
-    
+
     correspondence_addr = db.Column(db.String(200))
     work_addr = db.Column(db.String(200))
     
@@ -326,7 +340,7 @@ class CsvData(db.Model):
     quali_name_c = db.Column(db.String(200))
     quali_issue_auth_c = db.Column(db.String(200))
     quali_issue_yr_c = db.Column(db.String(10))
-    
+
     quali_name_d = db.Column(db.String(200))
     quali_issue_auth_d = db.Column(db.String(200))
     quali_issue_yr_d = db.Column(db.String(10))

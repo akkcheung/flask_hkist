@@ -1,5 +1,5 @@
 import re
-import decimal
+# import decimal
 
 from flask import current_app
 
@@ -12,7 +12,7 @@ from wtforms.fields.html5 import DateField
 from wtforms.fields import FieldList, FormField, TextAreaField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, Regexp, Optional, Required
 
-#from wtforms.widgets import TextArea
+# from wtforms.widgets import TextArea
 from wtforms.widgets import ListWidget, CheckboxInput
 
 from wtforms import Form
@@ -42,7 +42,7 @@ class MultiCheckboxField(SelectMultipleField):
 
 class LoginForm(FlaskForm):
 
-    #username = StringField('Username', validators=[DataRequired()])
+    # username = StringField('Username', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
     remember_me = BooleanField('Remember Me')
@@ -153,7 +153,8 @@ class ProfessionalRecognitionForm(FlaskForm):
     country_name = StringField('Country Name', validators=[DataRequired()])
     organization_name = StringField('Organization Name', validators=[DataRequired()])
     membership_type = StringField('Membership Type')
-    expiry_date = DateField('Expiry Date', format='%Y-%m-%d', validators=[Optional()])
+    #expiry_date = DateField('Expiry Date', format='%Y-%m-%d', validators=[Optional()])
+    exp_to = StringField('Expiry Date', validators=[DataRequired()])
 
     
 class ProfessionalRecognitionEntriesForm(FlaskForm):
@@ -166,8 +167,11 @@ class WorkExperienceForm(FlaskForm):
     work_experience_id = HiddenField('id')
     employer_name = StringField('Employer Name', validators=[DataRequired()])
     job_title = StringField('Job Title', validators=[DataRequired()])
-    from_date = DateField('From Date', format='%Y-%m-%d', validators=[Optional()])
-    to_date = DateField('To Date', format='%Y-%m-%d', validators=[Optional()])
+    #from_date = DateField('From Date', format='%Y-%m-%d', validators=[Optional()])
+    exp_from = StringField('From Date', validators=[Optional()])
+
+    #to_date = DateField('To Date', format='%Y-%m-%d', validators=[Optional()])
+    exp_to = StringField('To Date', validators=[Optional()])
 
 
 class WorkExperienceEntriesForm(FlaskForm):
@@ -208,6 +212,7 @@ class AskQuestionForm(FlaskForm):
     answer = DateField('What is you birthday ?', format='%Y-%m-%d', validators=[DataRequired()])
 '''
 
+
 class ResetPasswordForm(FlaskForm):
     #signUp = FormField(SignUpForm)
     #askQuestion = FormField(AskQuestionForm)
@@ -225,6 +230,7 @@ class ForgetPasswordForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Submit')
 
+
 class CpdActivityEntryHeaderForm(FlaskForm):
 
     cpd_activity_entry_header = HiddenField('id')
@@ -234,10 +240,10 @@ class CpdActivityEntryHeaderForm(FlaskForm):
 class CpdActivityEntryForm(FlaskForm):
 #class CpdActivityEntryForm(ModelForm):
 
-  
-    #activity_description = StringField('Description', validators=[DataRequired()])
 
-    #id = HiddenField('id')
+    # activity_description = StringField('Description', validators=[DataRequired()])
+
+    # id = HiddenField('id')
     cpd_activity_entry_id = HiddenField('id')
     activity_description = TextAreaField('Description')
     point_awarded = DecimalField('Point awarded', places=1, rounding=None)
@@ -274,9 +280,11 @@ class UploadForm(FlaskForm):
              raise ValidationError('The file type is not allowed!')
     '''
 
+
 class UploadEntriesForm(FlaskForm):
 
     upload_entries = FieldList(FormField(UploadForm), min_entries=0, max_entries=3)
+
 
 '''
 class ApplicantSearchForm(FlaskForm):
