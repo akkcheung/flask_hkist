@@ -19,11 +19,8 @@
 		{% for member in members %}
 	 	    <tr valign="top">
                 <td>
-                
-                {% if member.old_id %}
-                   ST{{ '%06d' % member.old_id }}
-                {% else %}
-                   ST{{ '%06d' % member.id }}
+                {% if member.member_id %}
+                   {{ member.member_id }}
                 {% endif %}
                 </td>
 	            <td> {{ member.name_of_registrant }} </td>

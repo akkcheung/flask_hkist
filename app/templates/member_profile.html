@@ -17,10 +17,12 @@
 <p class="text-info">
 
 {% if personDetail.is_register %}
-    {% if personDetail.online_id|length %}
-        {{ personDetail.online_id }}
+    {% if not personDetail.member_id %}
+        N/A
     {% else %}
-        {{ personDetail.id }} 
+        {% if personDetail.member_id|length %}
+            {{ personDetail.member_id }}
+        {% endif %}
     {% endif %}
 {% else %}
     Not registered member 
@@ -35,8 +37,11 @@
 Active valid until : {{ cpdActivityEntryHeader.end_date }}
 {% endif %}
 
+
 {% if is_expire %}
-Expired on : {{ date_of_expire }} 
+  Expired on : {{ date_of_expire }} 
+{% else %}
+  Expired on : N/A
 {% endif %}
 
 {% if is_suspend%}

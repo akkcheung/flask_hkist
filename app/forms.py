@@ -8,7 +8,7 @@ from flask_wtf.file import FileField, FileAllowed, FileRequired
 from flask_ckeditor import CKEditorField
 
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, HiddenField, SelectField, RadioField, DecimalField, SelectMultipleField
-from wtforms.fields.html5 import DateField
+from wtforms.fields.html5 import DateField, EmailField
 from wtforms.fields import FieldList, FormField, TextAreaField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, Regexp, Optional, Required
 
@@ -82,6 +82,7 @@ class PersonDetailForm(FlaskForm):
 
     mobile_phone = StringField('Contact number (Mobile)', validators=[DataRequired()])
     office_phone = StringField('Contact number (Office)')
+    email = StringField('Contact Email')
 
     correspondence_addr = StringField('Correspondence Address', validators=[DataRequired()])
     work_addr = StringField('Work Address')

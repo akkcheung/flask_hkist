@@ -70,13 +70,14 @@ class PersonDetail(db.Model):
     chinese_name = db.Column(db.String(50))
     online_id = db.Column(db.String(50))
     online_registration_date = db.Column(db.DateTime)
-    #email = db.Column(db.String(100), index=True, unique=True)
     mobile_phone = db.Column(db.String(50))
     office_phone = db.Column(db.String(50))
+    email = db.Column(db.String(100), index=True, unique=True)
     correspondence_addr = db.Column(db.String(200))
     work_addr = db.Column(db.String(200))
 
     old_id = db.Column(db.Integer())
+    member_id = db.Column(db.String(50), index=True, unique=True)
    
     is_register = db.Column(db.Boolean, default=False)
 

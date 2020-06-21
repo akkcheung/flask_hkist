@@ -1867,7 +1867,8 @@ class PaymentHistoryView(AdminModelView):
 #class PersonDetailView(AdminModelView):
 class PersonDetailView(AdminModelEditView):
 
-    column_list = ['old_id', 'name_of_registrant', 'chinese_name', 'user.email', 'mobile_phone', 'correspondence_addr','date_of_submit','date_of_check', 'date_of_approve', 'is_register' ]
+    #column_list = ['old_id', 'name_of_registrant', 'chinese_name', 'user.email', 'mobile_phone', 'correspondence_addr','date_of_submit','date_of_check', 'date_of_approve', 'is_register' ]
+    column_list = ['member_id', 'name_of_registrant', 'chinese_name', 'user.email', 'mobile_phone', 'correspondence_addr','date_of_submit','date_of_check', 'date_of_approve', 'is_register' ]
     column_searchable_list = ['name_of_registrant', 'mobile_phone', 'user.email']
     can_export = True
 
