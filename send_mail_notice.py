@@ -46,27 +46,34 @@ if cpdActivityEntryHeader_list :
 
         try:
             if not cpd_activity_entry_header.is_closed :
+
+                if not cpd_activity_entry_header.is_sent_three_month_before_expiry :
+                    print('if-A')
+                    if date.today() < cpd_activity_entry_header.end_date.date() and date.today() + relativedelta(months=+3) > cpd_activity_entry_header.end_date.date() : 
+                        print('if-A-1')
+                        is_sent_three_month_before_expiry = True
+
                 if not cpd_activity_entry_header.is_sent_one_month_before_expiry :
-                    print('if-1')
+                    print('if-B')
                     #print(date.today() + relativedelta(month=+1))
                     if date.today() < cpd_activity_entry_header.end_date.date() and date.today() + relativedelta(months=+1) > cpd_activity_entry_header.end_date.date() : 
-                        print('if-1-1')
+                        print('if-B-1')
                         is_sent_one_month_before_expiry = True
 
                 if not cpd_activity_entry_header.is_sent_three_month_grace_period :  
-                    print('if-2')
+                    print('if-C')
                     if date.today() >= cpd_activity_entry_header.end_date.date() and date.today() < cpd_activity_entry_header.end_date.date() + relativedelta(months=+3):
-                        print('if-2-1')
+                        print('if-C-1')
                         is_sent_three_month_grace_period = True
 
                 if not cpd_activity_entry_header.is_sent_expiry_and_membership_remove :
-                    print('if-3')
+                    print('if-D')
                     if date.today() >= cpd_activity_entry_header.end_date.date() + relativedelta(months=+3) :
-                        print('if-3-1')
+                        print('if-D-1')
                         is_sent_expiry_and_membership_remove= True
 
-                if is_sent_one_month_before_expiry or is_sent_three_month_grace_period or is_sent_expiry_and_membership_remove :
-                    print('if-4')
+                if is_sent_three_month_grace_period or is_sent_one_month_before_expiry or is_sent_three_month_grace_period or is_sent_expiry_and_membership_remove :
+                    print('if-E')
 
                     emailNotice = EmailNotice()
                     emailNotice.create_date = datetime.now()
@@ -75,27 +82,34 @@ if cpdActivityEntryHeader_list :
 
                     message = ''
 
+                    if is_sent_three_month_before_expiry :
+                        emailNotice.is_sent_three_month_before_expiry = True
+                        cpd_activity_entry_header.is_sent_three_month_before_expiry = True
+
+                        email_subject = 'Membership Renewal'
+                        message = 'Speech Therapists are encouraged to commit to life-long learning to ensure their knowledge and skills are up-to-date in order to deliver the highest level of care to their clients and stakeholders. Registrants of Hong Kong Institute of Speech Therapists Limited (HKIST) must engage in a range of activities to meet a minimum number of Continuous Professional Development for Speech Therapists (CPD-ST) points in order to renew their annual membership of HKIST. Any CPD-ST point earned during the membership renewal period should be immediately submitted in the online CPD Log system. Speech Therapists must accumulate a minimum of 15 CPD-ST points per year to be eligible to renew their HKIST membership. The membership renewal commences from one month before the annual membership expired and this is a warm reminder for you to input all your CPD-ST points earned this year. Members with inadequate CPD-ST points are not eligible for membership renewal. <p></p>For details, please refer to The Continuing Professional Development Framework of HKIST which can be downloaded from our website, www.hkist.org.hk.'
+
                     if is_sent_one_month_before_expiry :
                         emailNotice.is_sent_one_month_before_expiry = True
                         cpd_activity_entry_header.is_sent_one_month_before_expiry = True
 
-                        email_subject = "Notice : 1 month less to complete your CPD Acitivity record"
-                        message = 'Please be remind that you have less than ONE month to complete your CPD record.'
+                        email_subject = 'Membership Renewal'
+                        message = 'Thank you for your registration in HKIST. The membership renewal commences from one month before the annual membership expired and this is a warm reminder for you to log in to HKIST\'s webpage (www.hkist.org.hk) and start the renewal process.'
 
                     if is_sent_three_month_grace_period :
                         emailNotice.is_sent_three_month_grace_period = True
                         cpd_activity_entry_header.is_sent_three_month_grace_period = True
 
-                        email_subject = "Notice : 3 months grace period is provided to complete your CPD record"
-                        message = 'Please be remind that you are given THREE months grace period to complete your CPD record.'
+                        email_subject = "Membership Renewal"
+                        message = "Speech Therapists must accumulate a minimum of 15 CPD-ST points per year, carry an updated professional insurance cover and submit a membership fee of HKD 1500 to be eligible to renew their HKIST membership. A 3-month period will be allowed for members to fulfill the above-mentioned requirements for their annual membership renewal. If the member fails to meet the requirements within this period, he/she will no longer be eligible for their HKIST full membership. The membership will be considered to be lapsed and such individual will be required to re-apply for HKIST full membership. <p></p>According to our system record, you have not reached all of the requirements. This is an email notification for you to engage in sufficient CPD activities, renew your professional insurance cover and submit the membership fee within this 3-month period so that you can proceed with your membership renewal. <p></p>For details, please refer to The Continuing Professional Development Framework of HKIST which can be downloaded from our website, www.hkist.org.hk.'"
 
                     if is_sent_expiry_and_membership_remove :
                         emailNotice.is_sent_expiry_and_membership_remove= True 
                         cpd_activity_entry_header.is_sent_expiry_and_membership_remove = True
                         personDetail.is_register = False
 
-                        email_subject = "Notice : The expiry date to complete your CPD record is past"  
-                        message = 'Please be remind the expiry date to fill your CPD record is past. And your membership is expired accordingly.'
+                        email_subject = "Suspension of Membership"
+                        message = "Speech Therapists must accumulate a minimum of 15 CPD-ST points per year, carry an updated professional insurance cover and submit a membership fee of HKD 1500 or HKD 3000(Overseas) to be eligible to renew their HKIST membership. A 3-month period will be allowed for members to fulfill the above-mentioned requirements for their annual membership renewal. <p></p>According to our system record, you have not reached all of the requirements. An email notification was sent to you with a 3-month grace period. However, we did not receive any update from you, regrettably we have to notice you that you are no longer be eligible for their HKIST full membership. The membership will be considered to be lapsed and you will be required to re-apply for HKIST full membership.<p></p>For details, please refer to The Continuing Professional Development Framework of HKIST which can be downloaded from our website, www.hkist.org.hk.'"
 
                     user = User.query.get(cpd_activity_entry_header.user_id)
                     print('send to : ' + user.email)

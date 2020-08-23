@@ -33,19 +33,21 @@
 <h5>c. Membership Status :</h5>
 
 <p class="text-info">
-{% if not cpdActivityEntryHeader %}
-Active valid until : {{ cpdActivityEntryHeader.end_date }}
+{% if  cpdActivityEntryHeader %}
+    {% if cpdActivityEntryHeader.end_date %}
+        Active valid until : {{ cpdActivityEntryHeader.end_date }} </br>
+    {% else %}
+        Non Active </br>
+    {% endif %}
 {% endif %}
 
 
 {% if is_expire %}
-  Expired on : {{ date_of_expire }} 
-{% else %}
-  Expired on : N/A
+  Expired on : {{ date_of_expire }} </br>
 {% endif %}
 
 {% if is_suspend%}
-Suspended on : {{ date_of_suspend }}
+Suspended on : {{ date_of_suspend }} </br>
 {% endif %}
 </p>
 
@@ -65,7 +67,7 @@ Suspended on : {{ date_of_suspend }}
     <input type="hidden" id="amount" name="amount" value="{{ amount|round|int }}">
     <input type="hidden" id="fee_amount" name="fee_amount" value="{{ fee.amount }}">
 
-    <script src="https://checkout.stripe.com/checkout.js" class="stripe-button" data-key="{{ key }}" data-description="{{ fee.description }}" data-amount="{{ amount|round|int }}" data-locale="auto" >
+    <script src="https://checkout.stripe.com/checkout.js" class="stripe-button" data-key="{{ key }}" data-description="{{ fee.description }}" data-amount="{{ amount|round|int }}" data-currency="hkd" data-locale="auto" >
     </script>
 
   </form>

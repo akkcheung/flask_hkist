@@ -72,7 +72,8 @@ class PersonDetail(db.Model):
     online_registration_date = db.Column(db.DateTime)
     mobile_phone = db.Column(db.String(50))
     office_phone = db.Column(db.String(50))
-    email = db.Column(db.String(100), index=True, unique=True)
+    #email = db.Column(db.String(100), index=True, unique=True)
+    email = db.Column(db.String(100), nullable=True, default='')
     correspondence_addr = db.Column(db.String(200))
     work_addr = db.Column(db.String(200))
 

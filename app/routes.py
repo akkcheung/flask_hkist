@@ -15,7 +15,7 @@ from flask import abort
 from flask import send_file
 
 from flask_admin.contrib.sqla import ModelView
-from flask_login import login_user, logout_user, current_user, login_required
+from flask_login import login_user, logout_user, current_user, login_required #, login_manager
 # from flask_session import session
 from flask_mail import Mail, Message
 from flask_paginate import Pagination, get_page_args
@@ -52,6 +52,11 @@ def randomString(stringLength):
     return ''.join(random.choice(letters) for i in range(stringLength))
 
 
+@login.unauthorized_handler
+def unauthorized_callback():
+    return redirect('/login?next=' + request.path)
+
+
 @app.route('/')
 @app.route('/index')
 def index():
@@ -79,7 +84,13 @@ def login():
             login_user(user, remember=True)
             flash('login successful', 'info')
 
-        return redirect(url_for('index'))
+        next = request.args.get('next')
+
+        if next is not None :
+            return redirect(next)
+        else :
+            return redirect(url_for('index'))
+
 
     return render_template('login.html', title='Sign In', form=form)
 
@@ -155,7 +166,7 @@ def forget_pwd():
             db.session.commit()
 
             try:
-                msg = Message("Forget Password", sender=app.config['MAIL_USERNAME'], recipients=[user.email])
+                msg = Message("HKIST Account", sender=app.config['MAIL_USERNAME'], recipients=[user.email])
                 msg.body = ""
                 msg.html = render_template('email_notice_reset_pwd.html', random_text=user.random_text_for_password_reset, domain_name=app.config['DOMAIN_NAME'])
                 mail.send(msg)
@@ -223,13 +234,27 @@ def my_profile():
     return render_template('my_profile.html', title='My Profile')
 
 
-@app.route('/member_profile', methods=['GET'])
+@app.route('/member_profile', methods=['GET', 'POST'])
+@app.route('/member_profile/<user_id>', methods=['GET', 'POST'])
 @login_required
-def member_profile():
+# def member_profile():
+def member_profile(user_id=None):
 
     # abort(404)  # disable temporarily
+    #if not current_user.is_authenticated:
+    #    return redirect(url_for('login'))
 
-    personDetail = PersonDetail.query.filter_by(user_id=current_user.id).first() 
+
+    print('>debug')
+    print(user_id)
+
+    current_user_id = current_user.id
+
+    if current_user.is_admin:
+        if user_id:
+            current_user_id = user_id
+
+    personDetail = PersonDetail.query.filter_by(user_id=current_user_id).first() 
 
     # err_msg = '';
 
@@ -237,11 +262,11 @@ def member_profile():
         flash('Please submit your Application first!', 'warning')
         return redirect(url_for('index'))
 
-    if not personDetail.date_of_approve:
-        flash('Your Application is not approved yet!', 'warning')
-        return redirect(url_for('index'))
+    # if not personDetail.date_of_approve and current_user.is_new_member :
+    #    flash('Your Application is not approved yet!', 'warning')
+    #    return redirect(url_for('index'))
 
-    last_payment = PaymentHistory.query.filter_by(user_id=current_user.id).order_by(PaymentHistory.date.desc()).first()
+    last_payment = PaymentHistory.query.filter_by(user_id=current_user_id).order_by(PaymentHistory.date.desc()).first()
 
     if last_payment: 
         # last_payment_date = last_payment.date.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -269,9 +294,9 @@ def member_profile():
             # is_error = True
             is_outstanding_payment = False
 
-    fee = Fee.query.filter(Fee.date_effective_to > date.today()).filter_by(type='Overseas').first()
+    fee = Fee.query.filter(Fee.date_effective_to > date.today()).filter_by(type='Local').first()
 
-    cpdActivityEntryHeader = CpdActivityEntryHeader.query.filter_by(user_id=current_user.id).order_by(CpdActivityEntryHeader.id.desc()).first()
+    cpdActivityEntryHeader = CpdActivityEntryHeader.query.filter_by(user_id=current_user_id).order_by(CpdActivityEntryHeader.id.desc()).first()
 
     if cpdActivityEntryHeader:
         '''
@@ -296,13 +321,18 @@ def member_profile():
         fee = Fee.query.filter(Fee.date_effective_to > date.today()).filter_by(type='Local').first()
 
     else:
-        fee = Fee.query.filter(Fee.date_effective_to > date.today()).filter_by(type='Overseas').first()
+        user= User.query.filter_by(id=current_user_id).first()
+
+        if user.is_new_member :
+            fee = Fee.query.filter(Fee.date_effective_to > date.today()).filter_by(type='Overseas').first()
+
+    #if current_user_id 
 
     amount = fee.amount * 100
 
     page = request.args.get('page', 1, type=int)
 
-    payments = PaymentHistory.query.filter_by(user_id=current_user.id).order_by(PaymentHistory.date.desc()).paginate(page, app.config['PAYMENT_HISTORY_RECORD_PER_PAGE'], False)
+    payments = PaymentHistory.query.filter_by(user_id=current_user_id).order_by(PaymentHistory.date.desc()).paginate(page, app.config['PAYMENT_HISTORY_RECORD_PER_PAGE'], False)
 
     next_url = url_for('member_profile', page=payments.next_num) \
         if payments.has_next else None
@@ -626,7 +656,7 @@ def applicant_list():
 
     #if not is_approve :
     if not application_status :
-        #applicants = PersonDetail.query.order_by(PersonDetail.name_of_registrant).paginate(page, app.config['MEMBERS_PER_PAGE'], False)
+        applicants = PersonDetail.query.order_by(PersonDetail.name_of_registrant).paginate(page, app.config['MEMBERS_PER_PAGE'], False)
         #applicants = PersonDetail.query.order_by(PersonDetail.name_of_registrant)
 
         if not begin_letter :
@@ -667,6 +697,7 @@ def applicant_list():
             , 'email' : user.email
             , 'valid_period' : valid_period
             , 'cpd_activity_entry_header_id' : cpd_activity_entry_header_id
+            , 'user_id' : applicant.user_id
         }
 
         applicantObjectList.append(applicantObject)
@@ -1029,6 +1060,9 @@ def assessment_form_edit(id):
     #print(id)
 
     is_registration_form_submit = False;
+    is_form_check = True
+    is_form_approve = True
+    #user = User.query.filter_by(id=current_user.id).first()
 
     if current_user.is_admin or current_user.is_checker:
         #pass
@@ -1038,6 +1072,9 @@ def assessment_form_edit(id):
         # print(personDetail)
 
         current_user_id = personDetail.user_id
+        #user = User.query.filter_by(id=id).first()
+
+        
 
     else:
         # abort(404) # disable temporarily
@@ -1046,6 +1083,7 @@ def assessment_form_edit(id):
             is_registration_form_submit = True
             #flash('Your registration form is submitted already!', 'warning')
             #return redirect(url_for('index'))
+
 
     p_form = PersonDetailForm(prefix='p-')
 
@@ -1086,6 +1124,17 @@ def assessment_form_edit(id):
                 p_form.local_or_overseas.default = 'overseas'
 
             p_form.process(obj=personDetail)
+
+
+            #print('debug')
+            #print(personDetail.date_of_check )
+            #print(personDetail.date_of_approve )
+
+            if personDetail.date_of_check is None :
+                is_form_check = False
+
+            if personDetail.date_of_approve is None :
+                is_form_approve = False
 
         # lc_entries = LangCompetence.query.filter_by(user_id=current_user.id).all()
         lc_entries = LangCompetence.query.filter_by(user_id=current_user_id).all()
@@ -1318,8 +1367,6 @@ def assessment_form_edit(id):
                 #if personDetail.is_form_submit :
                 if user.is_registration_form_submit :
 
-                    #personDetail.is_form_check = False
-                    #personDetail.is_form_submit = False
                     personDetail.date_of_submit = None
                     #personDetail.date_of_check = None
                     #personDetail.date_of_approve = None
@@ -1332,6 +1379,16 @@ def assessment_form_edit(id):
                     db.session.commit()
 
                     flash('Returned to applicant for modification!', 'success')
+
+                    try:
+                        msg = Message("HKIST Application", sender=app.config['MAIL_USERNAME'], recipients=[user.email])
+                        msg.body = ""
+                        msg.html = render_template('email_notice_return_assessment_form.html')
+                        mail.send(msg)
+
+                    except Exception as e:
+                        print(type(e))
+                        print(e)
 
                 else: 
                     flash('Applicant does not submit the application !', 'warning')
@@ -1359,7 +1416,7 @@ def assessment_form_edit(id):
                         fee = Fee.query.filter(Fee.date_effective_to > date.today()).filter_by(type='Overseas').first()        
 
                     try:
-                        msg = Message("Your HKIST Application is received", sender=app.config['MAIL_USERNAME'], recipients=[user.email])
+                        msg = Message("HKIST Application", sender=app.config['MAIL_USERNAME'], recipients=[user.email])
                         msg.body = ""
                         msg.html = render_template('email_notice_check_assessment_form.html', fee=fee, domain_name=app.config['DOMAIN_NAME'])
                         mail.send(msg)
@@ -1404,7 +1461,7 @@ def assessment_form_edit(id):
                     flash('Application is approved!', 'success')
 
                     try:
-                        msg = Message("Your HKIST Application is completed", sender=app.config['MAIL_USERNAME'], recipients=[user.email])
+                        msg = Message("HKIST Application", sender=app.config['MAIL_USERNAME'], recipients=[user.email])
                         msg.body = ""
                         msg.html = render_template('email_notice_approve_assessment_form.html', domain_name=app.config['DOMAIN_NAME'])
                         mail.send(msg)
@@ -1818,6 +1875,9 @@ def assessment_form_edit(id):
         #, upl_c_form = upl_c_form
         , uploadRecords=uploadRecords
         , is_registration_form_submit = is_registration_form_submit
+        , is_form_check = is_form_check
+        , is_form_approve = is_form_approve
+        #, user = user
         )
 
 
@@ -1868,8 +1928,8 @@ class PaymentHistoryView(AdminModelView):
 class PersonDetailView(AdminModelEditView):
 
     #column_list = ['old_id', 'name_of_registrant', 'chinese_name', 'user.email', 'mobile_phone', 'correspondence_addr','date_of_submit','date_of_check', 'date_of_approve', 'is_register' ]
-    column_list = ['member_id', 'name_of_registrant', 'chinese_name', 'user.email', 'mobile_phone', 'correspondence_addr','date_of_submit','date_of_check', 'date_of_approve', 'is_register' ]
-    column_searchable_list = ['name_of_registrant', 'mobile_phone', 'user.email']
+    column_list = ['member_id', 'name_of_registrant', 'chinese_name', 'user.email', 'email', 'mobile_phone', 'correspondence_addr','date_of_submit','date_of_check', 'date_of_approve', 'is_register' ]
+    column_searchable_list = ['name_of_registrant', 'mobile_phone', 'user.email', 'email']
     can_export = True
 
 

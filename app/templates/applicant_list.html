@@ -8,8 +8,10 @@
 	<!-- <input type="text" name="Name search"/> -->
     <!-- <input type="checkbox" name="is_not_check"   {{ 'checked' if is_check == 'N' }}>&nbsp Pending for check</input> -->
     <!-- <input type="checkbox" name="is_not_approve" {{ 'checked' if is_approve == 'N' }}>&nbsp Pending for approval</input> -->
-    <input type="radio" name="application_status" value="check" {{ 'checked' if application_status == 'check' }}> <label for="check">Pending for Check</label>
-    <input type="radio" name="application_status" value="approve" {{ 'checked' if application_status == 'approve'}}> <label for="approve">Pending for Approve</label>
+    <input type="radio" name="application_status" value="check" {{ 'checked' if application_status == 'check' }}> <label for="check">New Application pending for Check</label>
+    <input type="radio" name="application_status" value="approve" {{ 'checked' if application_status == 'approve'}}> <label for="approve">New Application pending for Approve</label>
+    <br>
+    <input type="radio" name="application_status" value="renew" {{ 'checked' if application_status == 'renew'}}> <label for="renew">Pending for member renewal</label>
     <!-- <p></p> is_approve: {{ is_approve }} -->
     <!-- <p></p> begin_letter: {{ begin_letter }} -->
 
@@ -56,6 +58,7 @@
             <!-- <th scope="col">Chinese Name</th> -->
             <th scope="col">Email</th>
             <th scope="col">CPD Activity Form</th>
+            <th scope="col">Member Profile</th>
         </tr>
     </thead>
     <tbody>
@@ -65,6 +68,7 @@
             <!-- <td> {{ applicant.chinese_name }} </td> -->
             <td> {{ applicant.email }} </td>
             <td><a href="/cpd_activities/{{ applicant.cpd_activity_entry_header_id }}" >{{ applicant.valid_period }}</a></td>
+            <td><a href="/member_profile/{{ applicant.user_id }}" >{{ applicant.user_id }}</a></td>
         </tr>
         {% endfor %}
     </tbody>
