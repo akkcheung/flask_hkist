@@ -58,7 +58,7 @@
             <!-- <th scope="col">Chinese Name</th> -->
             <th scope="col">Email</th>
             <th scope="col">CPD Activity Form</th>
-            <th scope="col">Member Profile</th>
+            <th scope="col">Member ID</th>
         </tr>
     </thead>
     <tbody>
@@ -68,7 +68,7 @@
             <!-- <td> {{ applicant.chinese_name }} </td> -->
             <td> {{ applicant.email }} </td>
             <td><a href="/cpd_activities/{{ applicant.cpd_activity_entry_header_id }}" >{{ applicant.valid_period }}</a></td>
-            <td><a href="/member_profile/{{ applicant.user_id }}" >{{ applicant.user_id }}</a></td>
+            <td><a href="/member_profile/{{ applicant.user_id }}" >( {{ applicant.member_id }} )</a></td>
         </tr>
         {% endfor %}
     </tbody>

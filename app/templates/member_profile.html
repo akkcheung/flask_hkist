@@ -33,12 +33,15 @@
 <h5>c. Membership Status :</h5>
 
 <p class="text-info">
+<!--
 {% if  cpdActivityEntryHeader %}
     {% if cpdActivityEntryHeader.end_date %}
         Active valid until : {{ cpdActivityEntryHeader.end_date }} </br>
     {% else %}
         Non Active </br>
     {% endif %}
+{% else %}
+    Not registered member</br>
 {% endif %}
 
 
@@ -49,6 +52,13 @@
 {% if is_suspend%}
 Suspended on : {{ date_of_suspend }} </br>
 {% endif %}
+-->
+
+{% if personDetail.is_register %}
+Valid
+{% else %}
+Expired
+{% endif %}
 </p>
 
 <p></p>
@@ -56,7 +66,11 @@ Suspended on : {{ date_of_suspend }} </br>
 
 {{ err_msg }}
 
-{% if is_outstanding_payment %}
+{#% if is_outstanding_payment %#}
+
+{% if personDetail.is_register %}
+   <p class="text-info">No outstanding payment.</p>
+{% else %}
   <p></p>
   Annual Fee HK${{ fee.amount }} is outstanding.
 
@@ -72,11 +86,8 @@ Suspended on : {{ date_of_suspend }} </br>
 
   </form>
 
-
   <p></p>
   (* We use <a href="https://stripe.com/" target="_blank">Stripe Payment gateway</a> )
-{% else %}
-<p class="text-info">No outstanding payment.</p>
 {% endif %}
 
 <p></p>

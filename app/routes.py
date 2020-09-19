@@ -698,6 +698,7 @@ def applicant_list():
             , 'valid_period' : valid_period
             , 'cpd_activity_entry_header_id' : cpd_activity_entry_header_id
             , 'user_id' : applicant.user_id
+            , 'member_id' : applicant.member_id
         }
 
         applicantObjectList.append(applicantObject)
