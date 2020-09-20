@@ -26,12 +26,12 @@ for csvData in csvData_records :
             #print(csvData.email)
             #print(user.id)
 
-            if not personDetail.date_of_approve :
-                personDetail.date_of_approve = date.today()
+            #if not personDetail.date_of_approve :
+            #    personDetail.date_of_approve = date.today()
 
-                db.session.commit()
+            #    db.session.commit()
     
-            if personDetail.is_register :
+            if personDetail.date_of_approve and personDetail.is_register :
                 cpdActivityEntryHeader = CpdActivityEntryHeader.query.filter_by(user_id = user.id).order_by(CpdActivityEntryHeader.id.desc()).first()
 
 
