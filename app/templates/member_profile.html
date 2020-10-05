@@ -71,23 +71,27 @@ Expired
 {% if personDetail.is_register %}
    <p class="text-info">No outstanding payment.</p>
 {% else %}
-  <p></p>
-  Annual Fee HK${{ fee.amount }} is outstanding.
+  {% if personDetail.date_of_check and personDetail.date_of_approve %}
+    <p></p>
+    Annual Fee HK${{ fee.amount }} is outstanding.
 
-  <p></p>
-  <form action="/charge" method="post">
+    <p></p>
+    <form action="/charge" method="post">
 
-    <input type="hidden" id="description" name="description" value="{{ fee.description }}">
-    <input type="hidden" id="amount" name="amount" value="{{ amount|round|int }}">
-    <input type="hidden" id="fee_amount" name="fee_amount" value="{{ fee.amount }}">
+      <input type="hidden" id="description" name="description" value="{{ fee.description }}">
+      <input type="hidden" id="amount" name="amount" value="{{ amount|round|int }}">
+      <input type="hidden" id="fee_amount" name="fee_amount" value="{{ fee.amount }}">
 
-    <script src="https://checkout.stripe.com/checkout.js" class="stripe-button" data-key="{{ key }}" data-description="{{ fee.description }}" data-amount="{{ amount|round|int }}" data-currency="hkd" data-locale="auto" >
+      <script src="https://checkout.stripe.com/checkout.js" class="stripe-button" data-key="{{ key }}" data-description="{{ fee.description }}" data-amount="{{ amount|round|int }}" data-currency="hkd" data-locale="auto" >
     </script>
 
-  </form>
+    </form>
 
-  <p></p>
-  (* We use <a href="https://stripe.com/" target="_blank">Stripe Payment gateway</a> )
+    <p></p>
+    (* We use <a href="https://stripe.com/" target="_blank">Stripe Payment gateway</a> )
+  {% else %}
+    <p class="text-info">Application is in progress</p>
+  {% endif %}
 {% endif %}
 
 <p></p>
