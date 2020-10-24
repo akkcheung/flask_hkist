@@ -493,10 +493,11 @@ def cpd_activities_entry(id=None):
                 if not personDetail.date_of_approve:
                     flash("Please complete your Application form first before proceeding !", "warning")
                     return redirect(url_for('index'))
-
+            '''
             if current_user.is_new_member:
                 flash("As you are a new member, would you please pay your registration fee before filling CPD !", "warning")
                 return redirect(url_for('index'))
+            '''
 
     cpdActivityEntryHeader = CpdActivityEntryHeader.query.filter_by(user_id=current_user.id).order_by(CpdActivityEntryHeader.start_date.desc()).first()
 
