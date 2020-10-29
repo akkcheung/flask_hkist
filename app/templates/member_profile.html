@@ -68,8 +68,9 @@ Expired
 
 {#% if is_outstanding_payment %#}
 
-{% if personDetail.is_register %}
+{% if personDetail.is_register and is_outstanding_payment is sameas false %}
    <p class="text-info">No outstanding payment.</p>
+
 {% else %}
   {% if personDetail.date_of_check and personDetail.date_of_approve %}
     <p></p>

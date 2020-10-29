@@ -309,6 +309,14 @@ def member_profile(user_id=None):
             # is_error = True
             is_outstanding_payment = False
 
+            user = User.query.filter_by(id=current_user_id).first() 
+
+            if user.is_new_member :
+                is_outstanding_payment = True
+                # print('debug')
+                # print(user.email)
+                # print('outstanding_payment: T')
+
         if cpdActivityEntryHeader.is_sent_three_month_grace_period:
             is_expire = True
             date_of_expire = cpdActivityEntryHeader.end_date + timedelta(days=1)
