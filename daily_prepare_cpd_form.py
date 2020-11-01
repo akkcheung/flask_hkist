@@ -18,8 +18,10 @@ for personDetail in personDetails :
 
         if not cpdActivityEntryHeader:
             cpdActivityEntryHeader_new = CpdActivityEntryHeader()
-            cpdActivityEntryHeader_new.start_date = datetime(2020,1,1)
-            cpdActivityEntryHeader_new.end_date = datetime(2020,1,1) + relativedelta(years=1) - timedelta(days=1)
+            #cpdActivityEntryHeader_new.start_date = datetime(2020,1,1)
+            cpdActivityEntryHeader_new.start_date = personDetail.date_of_approve
+            #cpdActivityEntryHeader_new.end_date = datetime(2020,1,1) + relativedelta(years=1) - timedelta(days=1)
+            cpdActivityEntryHeader_new.end_date = datetime(2021,12,31)
 
             cpdActivityEntryHeader_new.user_id = user.id
 
