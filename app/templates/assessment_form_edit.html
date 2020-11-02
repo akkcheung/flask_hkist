@@ -347,25 +347,30 @@ function setType(type)
 	    </tbody>
     </table>
 
-    {% if current_user.is_checker or current_user.is_admin %}
     <p></p>
+
+    {% if current_user.is_checker or current_user.is_admin %}
+    <div>
+    {% else %}
+    <div style="display:none">
+    {% endif %}
     <h5>Application Status : </h5>
 
-    <div class="form-row">  
-        <div class="form-group col-md-2">            
-            {{ p_form.date_of_submit.label }}
-            {{ p_form.date_of_submit(disabled="disabled") }}
-        </div>
-        <div class="form-group col-md-2">
-            {{ p_form.date_of_check.label }}
-            {{ p_form.date_of_check(disabled="disabled") }}
-        </div>
-        <div class="form-group col-md-2">
-            {{ p_form.date_of_approve.label }}
-            {{ p_form.date_of_approve(disabled="disabled") }}
+        <div class="form-row">
+            <div class="form-group col-md-2">
+                {{ p_form.date_of_submit.label }}
+                {{ p_form.date_of_submit(readonly=true) }}
+            </div>
+            <div class="form-group col-md-2">
+                {{ p_form.date_of_check.label }}
+                {{ p_form.date_of_check(readonly=true) }}
+            </div>
+            <div class="form-group col-md-2">
+                {{ p_form.date_of_approve.label }}
+                {{ p_form.date_of_approve(readonly=true) }}
+            </div>
         </div>
     </div>
-    {% endif %}
 
     <p></p>
     <!--

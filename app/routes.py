@@ -1493,10 +1493,13 @@ def assessment_form_edit(id):
 
         p_form.populate_obj(personDetail)
 
-        '''
-        print('debug')
-        print(p_form.local_or_overseas.data)
-        '''
+        
+        print('debug -> date_of_check')
+        # print(p_form.local_or_overseas.data)
+        # print(p_form.date_of_check.data)
+        # print(p_form.date_of_submit.data)
+        # print(p_form.date_of_approve.data)
+        
 
         if p_form.local_or_overseas.data == 'local' :
             personDetail.is_charge_local_annual_fee = True
@@ -1868,6 +1871,7 @@ def assessment_form_edit(id):
         flash('Error occured!', 'danger')
         #print(wk_form.errors)
 
+        print(p_form.errors)
         print(lc_entries_form.errors)
         print(pq_entries_form.errors)
         print(pr_entries_form.errors)

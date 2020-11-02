@@ -91,9 +91,9 @@ class PersonDetailForm(FlaskForm):
     #is_form_submit = BooleanField('Submit')
     #is_form_check = BooleanField('Check')
     #is_form_approve = BooleanField('Approve')
-    date_of_submit = DateField('Date of Submit', format='%Y-%m-%d')
-    date_of_check = DateField('Date of Check', format='%Y-%m-%d')
-    date_of_approve = DateField('Date of Approve', format='%Y-%m-%d')
+    date_of_submit = DateField('Date of Submit', format='%Y-%m-%d', validators=[Optional(),])
+    date_of_check = DateField('Date of Check', format='%Y-%m-%d', validators=[Optional(),])
+    date_of_approve = DateField('Date of Approve', format='%Y-%m-%d', validators=[Optional(),])
 
     local_or_overseas = RadioField('Local or Overseas Graduation', choices=[('local', 'Local'), ('overseas', 'Overseas')])
 
