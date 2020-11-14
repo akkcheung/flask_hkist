@@ -151,11 +151,11 @@ class ProfessionalQualificationEntriesForm(FlaskForm):
 class ProfessionalRecognitionForm(FlaskForm):
 
     professional_recognition_id = HiddenField('id')
-    country_name = StringField('Country Name', validators=[DataRequired()])
-    organization_name = StringField('Organization Name', validators=[DataRequired()])
+    country_name = StringField('Country Name')
+    organization_name = StringField('Organization Name')
     membership_type = StringField('Membership Type')
     #expiry_date = DateField('Expiry Date', format='%Y-%m-%d', validators=[Optional()])
-    exp_to = StringField('Expiry Date', validators=[DataRequired()])
+    exp_to = StringField('Expiry Date', validators=[Optional()])
 
     
 class ProfessionalRecognitionEntriesForm(FlaskForm):

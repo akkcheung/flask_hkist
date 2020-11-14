@@ -1688,26 +1688,27 @@ def assessment_form_edit(id):
         for form in pr_entries_form.professional_recognition_entries :
 
             if int(form.professional_recognition_id.data) == 0 :
+                if form.country_name.data == "" and form.organization_name.data == "" and form.membership_type.data == "" :
+                    pass
 
-                professionalRecognition = ProfessionalRecognition()
+                else : 
+                    professionalRecognition = ProfessionalRecognition()
 
-                professionalRecognition.id = None
+                    professionalRecognition.id = None
 
-                professionalRecognition.country_name = form.country_name.data
-                professionalRecognition.organization_name = form.organization_name.data
-                professionalRecognition.membership_type = form.membership_type.data
-                #professionalRecognition.expiry_date = form.expiry_date.data
-                professionalRecognition.exp_to = form.exp_to.data
+                    professionalRecognition.country_name = form.country_name.data
+                    professionalRecognition.organization_name = form.organization_name.data
+                    professionalRecognition.membership_type = form.membership_type.data
+                    #professionalRecognition.expiry_date = form.expiry_date.data
+                    professionalRecognition.exp_to = form.exp_to.data
 
-                #professionalRecognition.user_id = current_user.id
-                professionalRecognition.user_id = current_user_id
-                    
-                db.session.add(professionalRecognition)
-                #db.session.commit()
-
+                    #professionalRecognition.user_id = current_user.id
+                    professionalRecognition.user_id = current_user_id
+                        
+                    db.session.add(professionalRecognition)
+                    #db.session.commit()
             else : 
 
-                #professionalRecognition = ProfessionalRecognition.query.filter_by(id=form.professional_recognition_id.data).filter_by(user_id=current_user.id).first()
                 professionalRecognition = ProfessionalRecognition.query.filter_by(id=form.professional_recognition_id.data).filter_by(user_id=current_user_id).first()
 
                 professionalRecognition.country_name = form.country_name.data
