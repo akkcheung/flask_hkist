@@ -644,7 +644,13 @@ def applicant_list():
             abort(404)
 
     #page = request.args.get('page', 1, type=int)
-    page, per_page, offset = get_page_args(page_parameter='page', per_page_parameter='per_page')
+    try:
+        page = int(request.args.get('page', 1))
+    except ValueError:
+        page = 1
+
+    #page, per_page, offset = get_page_args(page_parameter='page', per_page_parameter='per_page')
+    offset = (page - 1) * 50
 
     #is_check = request.args.get('is_check')
     #is_approve = request.args.get('is_approve')    
@@ -665,8 +671,8 @@ def applicant_list():
 
     #if not is_approve :
     if not application_status :
-        applicants = PersonDetail.query.order_by(PersonDetail.name_of_registrant).paginate(page, app.config['MEMBERS_PER_PAGE'], False)
-        #applicants = PersonDetail.query.order_by(PersonDetail.name_of_registrant)
+        #applicants = PersonDetail.query.order_by(PersonDetail.name_of_registrant).paginate(page, app.config['MEMBERS_PER_PAGE'], False)
+        applicants = PersonDetail.query.order_by(PersonDetail.name_of_registrant)
 
         if not begin_letter :
             applicants = PersonDetail.query.filter(PersonDetail.name_of_registrant.ilike('a%')).order_by(PersonDetail.name_of_registrant)
